@@ -1,10 +1,15 @@
 """Configuration management for Agent SDK integration."""
 
+from __future__ import annotations
+
 import json
 import os
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from .chaos.config import ChaosConfig
 
 
 @dataclass
@@ -61,6 +66,14 @@ class BridgeConfig:
     log_level: str = "INFO"
     log_detections: bool = True
 
+    # Chaos engineering (optional, off by default)
+    chaos: Optional["ChaosConfig"] = None
+
+    # Telemetry (opt-in, off by default)
+    enable_telemetry: bool = False
+    telemetry_api_key: str = ""
+    telemetry_host: str = "https://us.i.posthog.com"
+
     @classmethod
     def from_env(cls) -> "BridgeConfig":
         """Create config from environment variables.
@@ -85,6 +98,9 @@ class BridgeConfig:
             fail_open=os.getenv("PISAMA_FAIL_OPEN", "true").lower() == "true",
             context_window=int(os.getenv("PISAMA_CONTEXT_WINDOW", "10")),
             log_level=os.getenv("PISAMA_LOG_LEVEL", "INFO"),
+            enable_telemetry=os.getenv("PISAMA_TELEMETRY", "false").lower() == "true",
+            telemetry_api_key=os.getenv("PISAMA_TELEMETRY_API_KEY", ""),
+            telemetry_host=os.getenv("PISAMA_TELEMETRY_HOST", "https://us.i.posthog.com"),
         )
 
     @classmethod

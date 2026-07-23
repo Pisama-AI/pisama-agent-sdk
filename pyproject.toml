@@ -1,18 +1,18 @@
 [build-system]
-requires = ["hatchling<1.22"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
 name = "pisama-agent-sdk"
-version = "0.1.1"
-description = "Claude Agent SDK integration for MAO detection - real-time failure prevention via hooks"
+version = "0.2.0"
+description = "Claude Agent SDK integration for Pisama detection - real-time failure prevention via hooks"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    { name = "PISAMA Team" }
+    { name = "Pisama Team" }
 ]
-keywords = ["claude", "agent", "sdk", "detection", "hooks", "mao"]
+keywords = ["claude", "agent", "sdk", "detection", "hooks", "pisama"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -29,12 +29,27 @@ dependencies = [
 evaluator = [
     "httpx>=0.24",
 ]
+telemetry = [
+    "posthog>=3.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
     "pytest-timeout>=2.0",
     "httpx>=0.24",
+    "ruff>=0.12,<1",
 ]
+
+[project.scripts]
+# Phase C of plan-to-all-5-unified-glade.md: batch analysis of a
+# completed OpenHands / Harbor-on-OpenHands session directory.
+pisama-openhands-monitor = "pisama_agent_sdk.cli.openhands_monitor:main"
+
+[project.urls]
+Homepage = "https://pisama.ai"
+Documentation = "https://docs.pisama.ai/agent-sdk"
+Repository = "https://github.com/Pisama-AI/pisama-agent-sdk"
+Issues = "https://github.com/Pisama-AI/pisama-agent-sdk/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pisama_agent_sdk"]
