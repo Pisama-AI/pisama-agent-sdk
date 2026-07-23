@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+- Constrain pisama-core to its compatible major version.
+- Add Python 3.13 support metadata and release coverage.
+- Pin release actions and stabilize lint configuration.
+
 ## 0.2.0
 
 - Add ATIF v1.7 analysis support.

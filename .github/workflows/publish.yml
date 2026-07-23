@@ -32,11 +32,12 @@ jobs:
         run: |
           python -m venv /tmp/wheel-smoke
           /tmp/wheel-smoke/bin/pip install --quiet dist/*.whl
-          /tmp/wheel-smoke/bin/python - <<'PY'
+          EXPECTED_VERSION="${GITHUB_REF_NAME#v}" /tmp/wheel-smoke/bin/python - <<'PY'
+          import os
           import pisama_agent_sdk
           from pisama_agent_sdk.atif import AtifAnalyzeResult, SUPPORTED_SCHEMA_VERSIONS
 
-          assert pisama_agent_sdk.__version__ == "0.2.0"
+          assert pisama_agent_sdk.__version__ == os.environ["EXPECTED_VERSION"]
           assert "ATIF-v1.7" in SUPPORTED_SCHEMA_VERSIONS
           result = AtifAnalyzeResult.from_response({
               "trace": {

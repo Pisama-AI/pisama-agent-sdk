@@ -28,7 +28,7 @@ Claude Agent SDK Custom Tool:
     )
 """
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 # Hook functions (primary API)
 # ATIF (Harbor) trajectory analysis

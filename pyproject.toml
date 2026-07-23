@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pisama-agent-sdk"
-version = "0.2.0"
+version = "0.2.1"
 description = "Claude Agent SDK integration for Pisama detection - real-time failure prevention via hooks"
 readme = "README.md"
 requires-python = ">=3.10"
