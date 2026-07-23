@@ -16,9 +16,9 @@ import httpx
 import pytest
 
 from pisama_agent_sdk import (
+    AtifAnalyzeResult,
     OpenHandsEventStreamAdapter,
     StreamingDetection,
-    AtifAnalyzeResult,
 )
 from pisama_agent_sdk.cli.openhands_monitor import main as cli_main
 

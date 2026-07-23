@@ -21,8 +21,8 @@ import json
 import logging
 import time
 from typing import Any, Dict, List, Optional
-from urllib.request import Request, urlopen
 from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +97,8 @@ async def _check_via_bridge(
     timeout_ms: float,
 ) -> Dict[str, Any]:
     """Run check using the local detection bridge (no network call)."""
+    from pisama_core.traces.enums import Platform, SpanKind, SpanStatus
     from pisama_core.traces.models import Span
-    from pisama_core.traces.enums import SpanKind, SpanStatus, Platform
 
     ctx = context or {}
 

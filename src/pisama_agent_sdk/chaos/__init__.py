@@ -4,11 +4,11 @@ from .config import ChaosConfig
 from .experiments import (
     ChaosExperiment,
     ChaosResult,
-    ToolFailure,
-    LatencyInjection,
-    ErrorInjection,
-    OutputCorruption,
     ContextTruncation,
+    ErrorInjection,
+    LatencyInjection,
+    OutputCorruption,
+    ToolFailure,
 )
 
 __all__ = [

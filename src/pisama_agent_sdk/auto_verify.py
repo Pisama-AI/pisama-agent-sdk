@@ -47,7 +47,8 @@ from urllib import error as urllib_error
 from urllib import request as urllib_request
 
 from .heal import HealingResult
-from .indication import SDKIndication, _fire as _fire_indication
+from .indication import SDKIndication
+from .indication import _fire as _fire_indication
 
 logger = logging.getLogger(__name__)
 
