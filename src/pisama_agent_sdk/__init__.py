@@ -28,11 +28,38 @@ Claude Agent SDK Custom Tool:
     )
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 # Hook functions (primary API)
 from .hooks.pre_tool_use import pre_tool_use_hook, PreToolUseHook
 from .hooks.post_tool_use import post_tool_use_hook, PostToolUseHook
+
+# In-loop healing (Track B)
+from .heal import heal_now, HealingResult
+
+# Clarification primitive (Track F) — pause/ask/resume for entity_confusion etc.
+from .clarification import (
+    ClarificationPrimitive,
+    ClarificationRequest,
+    Resolution as ClarificationResolution,
+    register_clarification_builder,
+)
+
+# Indication channel (Track G) — out-of-band signal for the developer
+# running the agent. Wire on_indication(callable) to receive structured
+# notifications on every healing outcome.
+from .indication import (
+    SDKIndication,
+    on_indication,
+    clear_indication_callbacks,
+)
+
+# Auto-verify (Track H3) — runs an innovation primitive locally with a
+# real Claude client when the backend surfaces a recommended_verification
+# hint, then POSTs the outcome back to /healing/confirm-applied so
+# FixEffectivenessTracker accumulates real efficacy data alongside the
+# async-verification scheduler.
+from .auto_verify import auto_verify_and_confirm, AutoVerifyResult
 
 # Configuration
 from .bridge import configure_bridge, create_bridge, get_bridge
@@ -61,11 +88,45 @@ from .session import SessionManager, session_manager
 # Agent self-check
 from .check import check, configure_check
 
+# Specification compliance (beta, gated by PISAMA_ENABLE_CHECK_COMPLIANCE)
+from .check_compliance import (
+    BehavioralRule,
+    ComplianceResult,
+    PisamaFeatureNotEnabledError,
+    Violation,
+    check_compliance,
+)
+
 # Custom tools for Claude Agent SDK
 from .tools import create_check_tool, pisama_check_handler
 
 # Evaluator client (Pisama-as-evaluator for multi-agent harnesses)
 from .evaluator import PisamaEvaluator, EvalResult, EvalFailure
+
+# ATIF (Harbor) trajectory analysis
+from .atif import (
+    analyze_atif,
+    analyze_atif_batch,
+    AtifAnalyzeResult,
+    AtifDetection,
+)
+
+# OpenHands event-stream adapter (Phase C of plan-to-all-5-unified-glade)
+from .openhands_adapter import (
+    OpenHandsEventStreamAdapter,
+    StreamingDetection,
+    StreamingCallback,
+)
+
+# Chaos engineering (SDK-level failure injection)
+from .chaos import (
+    ChaosConfig,
+    ToolFailure,
+    LatencyInjection,
+    ErrorInjection,
+    OutputCorruption,
+    ContextTruncation,
+)
 
 __all__ = [
     # Version
@@ -103,6 +164,27 @@ __all__ = [
     # Agent self-check
     "check",
     "configure_check",
+    # In-loop healing
+    "heal_now",
+    "HealingResult",
+    # Clarification primitive
+    "ClarificationPrimitive",
+    "ClarificationRequest",
+    "ClarificationResolution",
+    "register_clarification_builder",
+    # Specification compliance (beta)
+    "check_compliance",
+    "ComplianceResult",
+    "BehavioralRule",
+    "Violation",
+    "PisamaFeatureNotEnabledError",
+    # Indication channel (Track G)
+    "SDKIndication",
+    "on_indication",
+    "clear_indication_callbacks",
+    # Auto-verify (Track H3)
+    "auto_verify_and_confirm",
+    "AutoVerifyResult",
     # Custom tools
     "create_check_tool",
     "pisama_check_handler",
@@ -110,4 +192,20 @@ __all__ = [
     "PisamaEvaluator",
     "EvalResult",
     "EvalFailure",
+    # ATIF (Harbor) trajectory analysis
+    "analyze_atif",
+    "analyze_atif_batch",
+    "AtifAnalyzeResult",
+    "AtifDetection",
+    # OpenHands event-stream adapter (Phase C)
+    "OpenHandsEventStreamAdapter",
+    "StreamingDetection",
+    "StreamingCallback",
+    # Chaos engineering
+    "ChaosConfig",
+    "ToolFailure",
+    "LatencyInjection",
+    "ErrorInjection",
+    "OutputCorruption",
+    "ContextTruncation",
 ]

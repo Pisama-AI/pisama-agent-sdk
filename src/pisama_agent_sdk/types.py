@@ -100,6 +100,14 @@ class BridgeResult:
     # Output message
     system_message: Optional[str] = None
 
+    # Primary detection metadata for in-loop healing (Track B). The bridge
+    # populates these when a specific detector fires; the PreToolUse hook
+    # uses them to call `heal_now()`. When unset, the hook falls back to
+    # the standard block-and-warn path.
+    primary_detection_type: Optional[str] = None
+    primary_details: Optional[dict[str, Any]] = None
+    framework: Optional[str] = None
+
     def to_hook_output(self) -> dict[str, Any]:
         """Convert to Agent SDK hook output format.
 
@@ -131,4 +139,7 @@ class BridgeResult:
             "execution_time_ms": self.execution_time_ms,
             "timed_out": self.timed_out,
             "system_message": self.system_message,
+            "primary_detection_type": self.primary_detection_type,
+            "primary_details": self.primary_details,
+            "framework": self.framework,
         }

@@ -17,7 +17,6 @@ Usage with Claude Agent SDK:
             print(message)
 """
 
-import json
 import logging
 from typing import Any, Dict, Optional
 

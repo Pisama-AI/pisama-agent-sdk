@@ -4,7 +4,7 @@ import asyncio
 import logging
 import re
 import time
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from pisama_core.detection.orchestrator import DetectionOrchestrator, RealtimeResult
 from pisama_core.detection.registry import DetectorRegistry
@@ -14,6 +14,9 @@ from .config import BridgeConfig
 from .converter import HookInputConverter
 from .session import SessionManager, session_manager
 from .types import BridgeResult, HookInput
+
+if TYPE_CHECKING:
+    from .chaos.experiments import ChaosResult
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +69,18 @@ class DetectionBridge:
             parallel=True,
         )
 
+        # Optional telemetry (opt-in only)
+        self._posthog = None
+        if self.config.enable_telemetry and self.config.telemetry_api_key:
+            try:
+                import posthog
+
+                posthog.project_api_key = self.config.telemetry_api_key
+                posthog.host = self.config.telemetry_host
+                self._posthog = posthog
+            except ImportError:
+                logger.debug("posthog not installed — telemetry disabled")
+
         # Compile tool patterns
         self._include_patterns = [re.compile(p) for p in self.config.tool_patterns]
         self._exclude_patterns = [
@@ -92,60 +107,114 @@ class DetectionBridge:
         start_time = time.perf_counter()
         tool_name = hook_input.get("tool_name", "")
 
-        # Check if tool should be analyzed
         if not self._should_analyze(tool_name):
             return BridgeResult(execution_time_ms=0)
 
         session_id = hook_input.get("session_id", "unknown")
-
-        # Check if session is already blocked
         if self.sessions.is_blocked(session_id):
-            return BridgeResult(
-                should_block=True,
-                severity=100,
-                issues=["Session is blocked due to previous violations"],
-                block_reason=self.sessions.get_block_reason(session_id),
-                system_message=self._format_blocked_message(session_id),
-            )
+            return self._blocked_session_result(session_id)
 
-        # Convert to span
+        hook_input, chaos_block = await self._prepare_pre_tool_input(
+            hook_input,
+            tool_name=tool_name,
+            start_time=start_time,
+        )
+        if chaos_block is not None:
+            return chaos_block
+
         span = self.converter.to_span(hook_input, tool_use_id, is_post=False)
-
-        # Get session context
         context = self.sessions.get_context(
             session_id, window=self.config.context_window
         )
+        result = await self._run_pre_detection(
+            span,
+            context,
+            tool_name=tool_name,
+            start_time=start_time,
+        )
+        if isinstance(result, BridgeResult):
+            return result
 
-        # Run detection with timeout
+        self.sessions.add_span(session_id, span)
+        execution_time_ms = (time.perf_counter() - start_time) * 1000
+        bridge_result = self._build_pre_tool_result(result, execution_time_ms)
+        self._record_pre_tool_outcome(
+            session_id=session_id,
+            tool_name=tool_name,
+            result=result,
+            bridge_result=bridge_result,
+        )
+        return bridge_result
+
+    def _blocked_session_result(self, session_id: str) -> BridgeResult:
+        return BridgeResult(
+            should_block=True,
+            severity=100,
+            issues=["Session is blocked due to previous violations"],
+            block_reason=self.sessions.get_block_reason(session_id),
+            system_message=self._format_blocked_message(session_id),
+        )
+
+    async def _prepare_pre_tool_input(
+        self,
+        hook_input: HookInput,
+        *,
+        tool_name: str,
+        start_time: float,
+    ) -> tuple[HookInput, Optional[BridgeResult]]:
+        chaos = self.config.chaos
+        if not chaos or not chaos.is_active:
+            return hook_input, None
+
+        chaos_result = self._apply_pre_chaos(tool_name, hook_input)
+        if chaos_result and chaos_result.block:
+            blocked = BridgeResult(
+                should_block=True,
+                severity=0,
+                block_reason=chaos_result.message,
+                system_message=chaos_result.message,
+                execution_time_ms=(time.perf_counter() - start_time) * 1000,
+            )
+            return hook_input, blocked
+        if chaos_result and chaos_result.delay_ms:
+            await asyncio.sleep(chaos_result.delay_ms / 1000)
+        if chaos_result and chaos_result.modified_input:
+            hook_input = {**hook_input, "tool_input": chaos_result.modified_input}
+        return hook_input, None
+
+    async def _run_pre_detection(
+        self,
+        span: Any,
+        context: Any,
+        *,
+        tool_name: str,
+        start_time: float,
+    ) -> RealtimeResult | BridgeResult:
         try:
-            result = await asyncio.wait_for(
+            return await asyncio.wait_for(
                 self.orchestrator.analyze_realtime(span, context),
                 timeout=self.config.detection_timeout_ms / 1000,
             )
-            timed_out = False
         except asyncio.TimeoutError:
             logger.warning(
                 f"Detection timeout for tool {tool_name} "
                 f"(>{self.config.detection_timeout_ms}ms)"
             )
-            # Timeout: allow to proceed but log
             return BridgeResult(
                 timed_out=True,
                 execution_time_ms=(time.perf_counter() - start_time) * 1000,
             )
 
-        # Add span to session (after analysis)
-        self.sessions.add_span(session_id, span)
-
-        execution_time_ms = (time.perf_counter() - start_time) * 1000
-
-        # Build result
+    def _build_pre_tool_result(
+        self,
+        result: RealtimeResult,
+        execution_time_ms: float,
+    ) -> BridgeResult:
         should_block = (
             self.config.enable_blocking
             and result.should_block
             and result.severity >= self.config.block_threshold
         )
-
         bridge_result = BridgeResult(
             should_block=should_block,
             severity=result.severity,
@@ -153,29 +222,47 @@ class DetectionBridge:
             recommendations=self._extract_recommendations(result),
             block_reason=result.block_reason,
             execution_time_ms=execution_time_ms,
-            timed_out=timed_out,
         )
-
-        # Generate system message for warnings or blocks
         if result.severity >= self.config.warning_threshold:
             bridge_result.system_message = self._format_pre_tool_message(
                 result.severity,
                 result.issues,
                 should_block,
             )
+        return bridge_result
 
-        # Block session if critical
-        if should_block and result.block_reason:
+    def _record_pre_tool_outcome(
+        self,
+        *,
+        session_id: str,
+        tool_name: str,
+        result: RealtimeResult,
+        bridge_result: BridgeResult,
+    ) -> None:
+        if bridge_result.should_block and result.block_reason:
             self.sessions.block(session_id, result.block_reason)
 
         if self.config.log_detections and result.severity > 0:
             logger.info(
                 f"PreToolUse detection: tool={tool_name} "
-                f"severity={result.severity} block={should_block} "
-                f"time={execution_time_ms:.1f}ms"
+                f"severity={result.severity} block={bridge_result.should_block} "
+                f"time={bridge_result.execution_time_ms:.1f}ms"
             )
 
-        return bridge_result
+        if self._posthog:
+            try:
+                self._posthog.capture(
+                    distinct_id=session_id,
+                    event="sdk_pre_tool_analyzed",
+                    properties={
+                        "tool_name": tool_name,
+                        "severity": result.severity,
+                        "blocked": bridge_result.should_block,
+                        "execution_time_ms": round(bridge_result.execution_time_ms, 1),
+                    },
+                )
+            except Exception:
+                pass
 
     async def analyze_post_tool(
         self,
@@ -201,6 +288,12 @@ class DetectionBridge:
             return BridgeResult(execution_time_ms=0)
 
         session_id = hook_input.get("session_id", "unknown")
+
+        # Apply chaos experiments to tool output
+        if self.config.chaos and self.config.chaos.is_active:
+            chaos_result = self._apply_post_chaos(tool_name, hook_input)
+            if chaos_result and chaos_result.modified_output is not None:
+                hook_input = {**hook_input, "tool_response": chaos_result.modified_output}
 
         # Convert to span (with response)
         span = self.converter.to_span(hook_input, tool_use_id, is_post=True)
@@ -255,6 +348,36 @@ class DetectionBridge:
             execution_time_ms=execution_time_ms,
             system_message=system_message,
         )
+
+    def _apply_pre_chaos(self, tool_name: str, hook_input: HookInput) -> Optional["ChaosResult"]:
+        """Apply pre-tool chaos experiments. Returns first matching result."""
+        chaos = self.config.chaos
+        if not chaos:
+            return None
+        tool_input = hook_input.get("tool_input", {})
+        for exp in chaos.experiments:
+            if exp.matches(tool_name) and exp.should_trigger():
+                result = exp.apply_pre(tool_name, tool_input)
+                if result.applied:
+                    chaos.record_affected()
+                    logger.info(result.message)
+                    return result
+        return None
+
+    def _apply_post_chaos(self, tool_name: str, hook_input: HookInput) -> Optional["ChaosResult"]:
+        """Apply post-tool chaos experiments. Returns first matching result."""
+        chaos = self.config.chaos
+        if not chaos:
+            return None
+        tool_output = hook_input.get("tool_response")
+        for exp in chaos.experiments:
+            if exp.matches(tool_name) and exp.should_trigger():
+                result = exp.apply_post(tool_name, tool_output)
+                if result.applied:
+                    chaos.record_affected()
+                    logger.info(result.message)
+                    return result
+        return None
 
     def _should_analyze(self, tool_name: str) -> bool:
         """Check if tool should be analyzed.

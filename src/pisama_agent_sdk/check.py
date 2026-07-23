@@ -201,10 +201,10 @@ async def _check_via_api(
         req = Request(url, data=body, headers=headers, method="POST")
         timeout_sec = timeout_ms / 1000
 
-        response = await asyncio.to_thread(
-            lambda: urlopen(req, timeout=timeout_sec)
+        raw = await asyncio.to_thread(
+            lambda: urlopen(req, timeout=timeout_sec).read()
         )
-        data = json.loads(response.read().decode())
+        data = json.loads(raw.decode())
 
         # Convert evaluate response to check format
         issues = []
