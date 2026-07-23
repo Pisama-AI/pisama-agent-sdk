@@ -1,18 +1,19 @@
 """Tests for DetectionBridge and hooks."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from pisama_agent_sdk import (
-    DetectionBridge,
     BridgeConfig,
     BridgeResult,
+    DetectionBridge,
     configure_bridge,
     create_bridge,
 )
-from pisama_agent_sdk.session import SessionManager
 from pisama_agent_sdk.converter import HookInputConverter
 from pisama_agent_sdk.hooks.matchers import HookMatcher, create_matcher
+from pisama_agent_sdk.session import SessionManager
 
 
 class TestBridgeConfig:

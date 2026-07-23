@@ -31,27 +31,12 @@ Claude Agent SDK Custom Tool:
 __version__ = "0.2.0"
 
 # Hook functions (primary API)
-from .hooks.pre_tool_use import pre_tool_use_hook, PreToolUseHook
-from .hooks.post_tool_use import post_tool_use_hook, PostToolUseHook
-
-# In-loop healing (Track B)
-from .heal import heal_now, HealingResult
-
-# Clarification primitive (Track F) — pause/ask/resume for entity_confusion etc.
-from .clarification import (
-    ClarificationPrimitive,
-    ClarificationRequest,
-    Resolution as ClarificationResolution,
-    register_clarification_builder,
-)
-
-# Indication channel (Track G) — out-of-band signal for the developer
-# running the agent. Wire on_indication(callable) to receive structured
-# notifications on every healing outcome.
-from .indication import (
-    SDKIndication,
-    on_indication,
-    clear_indication_callbacks,
+# ATIF (Harbor) trajectory analysis
+from .atif import (
+    AtifAnalyzeResult,
+    AtifDetection,
+    analyze_atif,
+    analyze_atif_batch,
 )
 
 # Auto-verify (Track H3) — runs an innovation primitive locally with a
@@ -59,31 +44,21 @@ from .indication import (
 # hint, then POSTs the outcome back to /healing/confirm-applied so
 # FixEffectivenessTracker accumulates real efficacy data alongside the
 # async-verification scheduler.
-from .auto_verify import auto_verify_and_confirm, AutoVerifyResult
+from .auto_verify import AutoVerifyResult, auto_verify_and_confirm
 
 # Configuration
-from .bridge import configure_bridge, create_bridge, get_bridge
-from .config import BridgeConfig, load_config
-
 # Bridge (for advanced use)
-from .bridge import DetectionBridge
+from .bridge import DetectionBridge, configure_bridge, create_bridge, get_bridge
 
-# Types
-from .types import BridgeResult, HookInput, HookContext, HookJSONOutput
-
-# Matchers
-from .hooks.matchers import (
-    HookMatcher,
-    ALL_TOOLS,
-    FILE_TOOLS,
-    SHELL_TOOLS,
-    DANGEROUS_COMMANDS,
-    AGENT_TOOLS,
-    create_matcher,
+# Chaos engineering (SDK-level failure injection)
+from .chaos import (
+    ChaosConfig,
+    ContextTruncation,
+    ErrorInjection,
+    LatencyInjection,
+    OutputCorruption,
+    ToolFailure,
 )
-
-# Session management
-from .session import SessionManager, session_manager
 
 # Agent self-check
 from .check import check, configure_check
@@ -97,36 +72,60 @@ from .check_compliance import (
     check_compliance,
 )
 
-# Custom tools for Claude Agent SDK
-from .tools import create_check_tool, pisama_check_handler
+# Clarification primitive (Track F) — pause/ask/resume for entity_confusion etc.
+from .clarification import (
+    ClarificationPrimitive,
+    ClarificationRequest,
+    register_clarification_builder,
+)
+from .clarification import (
+    Resolution as ClarificationResolution,
+)
+from .config import BridgeConfig, load_config
 
 # Evaluator client (Pisama-as-evaluator for multi-agent harnesses)
-from .evaluator import PisamaEvaluator, EvalResult, EvalFailure
+from .evaluator import EvalFailure, EvalResult, PisamaEvaluator
 
-# ATIF (Harbor) trajectory analysis
-from .atif import (
-    analyze_atif,
-    analyze_atif_batch,
-    AtifAnalyzeResult,
-    AtifDetection,
+# In-loop healing (Track B)
+from .heal import HealingResult, heal_now
+
+# Matchers
+from .hooks.matchers import (
+    AGENT_TOOLS,
+    ALL_TOOLS,
+    DANGEROUS_COMMANDS,
+    FILE_TOOLS,
+    SHELL_TOOLS,
+    HookMatcher,
+    create_matcher,
+)
+from .hooks.post_tool_use import PostToolUseHook, post_tool_use_hook
+from .hooks.pre_tool_use import PreToolUseHook, pre_tool_use_hook
+
+# Indication channel (Track G) — out-of-band signal for the developer
+# running the agent. Wire on_indication(callable) to receive structured
+# notifications on every healing outcome.
+from .indication import (
+    SDKIndication,
+    clear_indication_callbacks,
+    on_indication,
 )
 
 # OpenHands event-stream adapter (Phase C of plan-to-all-5-unified-glade)
 from .openhands_adapter import (
     OpenHandsEventStreamAdapter,
-    StreamingDetection,
     StreamingCallback,
+    StreamingDetection,
 )
 
-# Chaos engineering (SDK-level failure injection)
-from .chaos import (
-    ChaosConfig,
-    ToolFailure,
-    LatencyInjection,
-    ErrorInjection,
-    OutputCorruption,
-    ContextTruncation,
-)
+# Session management
+from .session import SessionManager, session_manager
+
+# Custom tools for Claude Agent SDK
+from .tools import create_check_tool, pisama_check_handler
+
+# Types
+from .types import BridgeResult, HookContext, HookInput, HookJSONOutput
 
 __all__ = [
     # Version

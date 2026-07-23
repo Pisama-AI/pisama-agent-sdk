@@ -17,7 +17,6 @@ from pisama_agent_sdk import (
 )
 from pisama_agent_sdk.atif import _discover_trajectory_files, _load_trajectory
 
-
 HARBOR_TERMINUS_FIXTURES = Path(__file__).parent / "fixtures" / "harbor"
 
 

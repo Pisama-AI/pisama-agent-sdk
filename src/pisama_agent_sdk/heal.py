@@ -229,7 +229,8 @@ def heal_now(
     # the developer running the agent gets an out-of-band signal even
     # when nothing surfaces via systemMessage. Best-effort.
     try:
-        from .indication import SDKIndication, _fire as _fire_indication
+        from .indication import SDKIndication
+        from .indication import _fire as _fire_indication
         indication = SDKIndication.from_healing_result(
             result,
             detection_type=detection_type,

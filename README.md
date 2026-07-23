@@ -10,6 +10,8 @@ Real-time failure detection hooks for the [Claude Agent SDK](https://github.com/
 
 Part of the [Pisama](https://pisama.ai) platform for single-agent, multi-agent, and sub-agent failure detection.
 
+Requires Python 3.10 or newer. Python 3.10 through 3.13 are tested.
+
 ## Install
 
 ```bash

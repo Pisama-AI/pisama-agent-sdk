@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+# Tests need the module object, not the function. ``from pisama_agent_sdk
+# import check_compliance`` above imports the function, so we re-resolve
+# the module via importlib for unambiguous patching.
+import importlib
 import io
 import json
 from unittest.mock import patch
@@ -15,10 +19,6 @@ from pisama_agent_sdk import (
     Violation,
     check_compliance,
 )
-# Tests need the module object, not the function. ``from pisama_agent_sdk
-# import check_compliance`` above imports the function, so we re-resolve
-# the module via importlib for unambiguous patching.
-import importlib
 
 check_compliance_module = importlib.import_module(
     "pisama_agent_sdk.check_compliance"

@@ -3,7 +3,6 @@
 from dataclasses import dataclass, field
 from typing import Any, Literal, Optional, TypedDict
 
-
 # ─────────────────────────────────────────────────────────────
 # Agent SDK Types (matching Claude Agent SDK API)
 # ─────────────────────────────────────────────────────────────

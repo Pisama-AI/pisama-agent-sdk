@@ -38,12 +38,11 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Literal, Optional
 
 from .atif import (
-    AtifAnalyzeResult,
     DEFAULT_API_URL,
     DEFAULT_TIMEOUT_SECONDS,
+    AtifAnalyzeResult,
     analyze_atif,
 )
-
 
 # Default Harbor-on-OpenHands layout. Used by on_session_complete() to
 # locate the agent trajectory inside a session directory.
