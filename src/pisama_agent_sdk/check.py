@@ -109,9 +109,12 @@ async def _check_via_bridge(
         kind=SpanKind.AGENT,
         status=SpanStatus.OK,
         platform=Platform.CLAUDE_CODE,
-        input_text=ctx.get("query", ctx.get("task", "")),
-        output_text=output,
-        metadata={"check_context": ctx},
+        input_data={
+            "content": ctx.get("query", ctx.get("task", "")),
+            "context": ctx,
+        },
+        output_data={"content": output, "text": output},
+        attributes={"check_context": ctx},
     )
 
     # Run realtime detection with timeout

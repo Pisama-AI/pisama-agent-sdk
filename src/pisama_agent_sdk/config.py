@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
@@ -125,6 +125,13 @@ class BridgeConfig:
         """
         with open(path) as f:
             data = json.load(f)
+
+        # ``save()`` writes the dataclass's flat public shape. Older config
+        # files used nested detection/session/logging sections, so accept both
+        # formats and keep save/from_file a true round trip.
+        if not any(section in data for section in ("detection", "session", "logging")):
+            allowed = {item.name for item in fields(cls)}
+            return cls(**{key: value for key, value in data.items() if key in allowed})
 
         # Handle nested structure
         detection = data.get("detection", {})

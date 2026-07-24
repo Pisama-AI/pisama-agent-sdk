@@ -8,6 +8,7 @@ from typing import Any, Optional
 from ..bridge import DetectionBridge, get_bridge
 from ..heal import HealingResult, heal_now
 from ..types import BridgeResult, HookContext, HookInput
+from .matchers import HookMatcher
 
 logger = logging.getLogger(__name__)
 
@@ -174,6 +175,7 @@ class PreToolUseHook:
         bridge: Optional[DetectionBridge] = None,
         fail_open: bool = True,
         auto_heal: Optional[bool] = None,
+        matcher: Optional[HookMatcher] = None,
     ) -> None:
         """Initialize the hook.
 
@@ -182,12 +184,15 @@ class PreToolUseHook:
             fail_open: If True, allow execution on hook errors
             auto_heal: Enable in-loop SAFE-risk healing. Defaults to the
                 `PISAMA_AUTO_HEAL` env flag when None.
+            matcher: Optional tool and input matcher. Unmatched calls pass
+                through without running detection.
         """
         self.bridge = bridge or get_bridge()
         self.fail_open = fail_open
         self.auto_heal = (
             auto_heal if auto_heal is not None else _auto_heal_enabled_from_env()
         )
+        self.matcher = matcher
 
     async def __call__(
         self,
@@ -206,6 +211,11 @@ class PreToolUseHook:
             Hook output dict
         """
         if not tool_use_id:
+            return {}
+        if self.matcher and not self.matcher.matches(
+            input_data.get("tool_name", ""),
+            input_data.get("tool_input"),
+        ):
             return {}
 
         try:
