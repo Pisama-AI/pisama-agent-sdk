@@ -81,10 +81,13 @@ configure_bridge(BridgeConfig(
 Control which tools get checked:
 
 ```python
-from pisama_agent_sdk import PreToolUseHook, create_matcher, FILE_TOOLS, SHELL_TOOLS
+from pisama_agent_sdk import PreToolUseHook, HookMatcher
 
 # Only check file and shell tools
-hook = PreToolUseHook(matcher=create_matcher(include=[FILE_TOOLS, SHELL_TOOLS]))
+matcher = HookMatcher(
+    tool_name_pattern=r"^(Read|Write|Edit|Glob|Grep|Bash|bash|shell)$"
+)
+hook = PreToolUseHook(matcher=matcher)
 agent.hooks.pre_tool_use = hook
 ```
 

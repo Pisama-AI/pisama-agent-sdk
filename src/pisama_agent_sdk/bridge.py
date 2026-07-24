@@ -527,7 +527,7 @@ def get_bridge() -> DetectionBridge:
 
 
 def configure_bridge(
-    warning_threshold: int = 40,
+    warning_threshold: int | BridgeConfig = 40,
     block_threshold: int = 60,
     timeout_ms: float = 80,
     enable_blocking: bool = True,
@@ -538,7 +538,8 @@ def configure_bridge(
     Call this before using hooks to customize behavior.
 
     Args:
-        warning_threshold: Severity to trigger warnings
+        warning_threshold: Severity to trigger warnings, or a complete
+            :class:`BridgeConfig` instance.
         block_threshold: Severity to trigger blocking
         timeout_ms: Detection timeout in milliseconds
         enable_blocking: Whether to allow blocking
@@ -548,13 +549,16 @@ def configure_bridge(
         Configured DetectionBridge instance
     """
     global _default_bridge
-    config = BridgeConfig(
-        warning_threshold=warning_threshold,
-        block_threshold=block_threshold,
-        detection_timeout_ms=timeout_ms,
-        enable_blocking=enable_blocking,
-        enable_recovery=enable_recovery,
-    )
+    if isinstance(warning_threshold, BridgeConfig):
+        config = warning_threshold
+    else:
+        config = BridgeConfig(
+            warning_threshold=warning_threshold,
+            block_threshold=block_threshold,
+            detection_timeout_ms=timeout_ms,
+            enable_blocking=enable_blocking,
+            enable_recovery=enable_recovery,
+        )
     _default_bridge = DetectionBridge(config=config)
     return _default_bridge
 
