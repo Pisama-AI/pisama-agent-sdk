@@ -31,7 +31,7 @@ evaluator = [
     "httpx>=0.24",
 ]
 telemetry = [
-    "posthog>=3.0",
+    "posthog>=7.29.0",
 ]
 dev = [
     "build>=1.2",
