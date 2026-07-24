@@ -38,7 +38,7 @@ jobs:
         run: mypy src/pisama_agent_sdk
 
       - name: Test
-        run: pytest tests/ -q --tb=short
+        run: pytest tests/ -q --tb=short --cov=pisama_agent_sdk --cov-report=term --cov-fail-under=60
 
   package:
     name: Build and inspect distributions
