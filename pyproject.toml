@@ -40,7 +40,7 @@ dev = [
     "pytest-asyncio>=0.21",
     "pytest-timeout>=2.0",
     "httpx>=0.24",
-    "ruff>=0.12,<1",
+    "ruff>=0.16.0,<1",
     "twine>=5.0",
 ]
 
