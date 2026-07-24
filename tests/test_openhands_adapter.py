@@ -29,9 +29,13 @@ def _clear_pisama_api_key(monkeypatch):
     monkeypatch.delenv("PISAMA_API_KEY", raising=False)
 
 
-# Backend repo's harbor-real fixtures (committed in Phase A0).
-BACKEND_FIXTURES = (
-    Path(__file__).resolve().parents[3] / "backend" / "tests" / "fixtures" / "atif"
+# Captured Harbor trajectory shipped with this standalone package. Keeping the
+# fixture local makes the published repository's test suite self-contained.
+HARBOR_TRAJECTORY = (
+    Path(__file__).parent
+    / "fixtures"
+    / "harbor"
+    / "hello-world-context-summarization-linear-history.trajectory.json"
 )
 
 
@@ -219,12 +223,8 @@ def test_on_session_complete_uses_session_trajectory_json(
     """Given a session_dir containing agent/trajectory.json, the adapter
     POSTs that trajectory and returns the AtifAnalyzeResult."""
     # Copy a real harbor-real fixture into the temp session_dir layout.
-    src = BACKEND_FIXTURES / "harbor-real" / "success" / "trajectory.json"
-    if not src.exists():
-        pytest.skip(f"backend fixture not available: {src}")
-
     (tmp_path / "agent").mkdir()
-    shutil.copy(src, tmp_path / "agent" / "trajectory.json")
+    shutil.copy(HARBOR_TRAJECTORY, tmp_path / "agent" / "trajectory.json")
 
     transport = _mock_transport(_fake_clean_response())
     patch_httpx_client(transport)
@@ -242,11 +242,7 @@ def test_on_session_complete_uses_session_trajectory_json_at_root(
 ):
     """Falls back to trajectory.json at the session root when there is
     no agent/ subdir."""
-    src = BACKEND_FIXTURES / "harbor-real" / "success" / "trajectory.json"
-    if not src.exists():
-        pytest.skip(f"backend fixture not available: {src}")
-
-    shutil.copy(src, tmp_path / "trajectory.json")
+    shutil.copy(HARBOR_TRAJECTORY, tmp_path / "trajectory.json")
 
     transport = _mock_transport(_fake_clean_response())
     patch_httpx_client(transport)
@@ -314,11 +310,8 @@ def test_on_session_complete_raises_when_nothing_available(tmp_path: Path):
 def test_cli_clean_session_returns_zero(
     patch_httpx_client, tmp_path: Path, capsys,
 ):
-    src = BACKEND_FIXTURES / "harbor-real" / "success" / "trajectory.json"
-    if not src.exists():
-        pytest.skip(f"backend fixture not available: {src}")
     (tmp_path / "agent").mkdir()
-    shutil.copy(src, tmp_path / "agent" / "trajectory.json")
+    shutil.copy(HARBOR_TRAJECTORY, tmp_path / "agent" / "trajectory.json")
 
     patch_httpx_client(_mock_transport(_fake_clean_response()))
 
@@ -331,10 +324,7 @@ def test_cli_clean_session_returns_zero(
 def test_cli_failure_session_returns_one(
     patch_httpx_client, tmp_path: Path, capsys,
 ):
-    src = BACKEND_FIXTURES / "harbor-real" / "failed" / "trajectory.json"
-    if not src.exists():
-        pytest.skip(f"backend fixture not available: {src}")
-    shutil.copy(src, tmp_path / "trajectory.json")
+    shutil.copy(HARBOR_TRAJECTORY, tmp_path / "trajectory.json")
 
     patch_httpx_client(_mock_transport(_fake_failure_response()))
 
@@ -355,10 +345,7 @@ def test_cli_missing_session_dir_returns_two(capsys):
 def test_cli_json_mode_emits_diagnosis_json(
     patch_httpx_client, tmp_path: Path, capsys,
 ):
-    src = BACKEND_FIXTURES / "harbor-real" / "success" / "trajectory.json"
-    if not src.exists():
-        pytest.skip(f"backend fixture not available: {src}")
-    shutil.copy(src, tmp_path / "trajectory.json")
+    shutil.copy(HARBOR_TRAJECTORY, tmp_path / "trajectory.json")
     patch_httpx_client(_mock_transport(_fake_clean_response()))
 
     exit_code = cli_main([str(tmp_path), "--json"])
