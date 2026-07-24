@@ -28,7 +28,7 @@ dependencies = [
 
 [project.optional-dependencies]
 evaluator = [
-    "httpx>=0.24",
+    "httpx>=0.28.1",
 ]
 telemetry = [
     "posthog>=3.0",
@@ -39,7 +39,7 @@ dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
     "pytest-timeout>=2.0",
-    "httpx>=0.24",
+    "httpx>=0.28.1",
     "ruff>=0.12,<1",
     "twine>=5.0",
 ]
