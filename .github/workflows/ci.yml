@@ -32,7 +32,33 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Lint
-        run: ruff check src/
+        run: ruff check src/ tests/
+
+      - name: Type check
+        run: mypy src/pisama_agent_sdk
 
       - name: Test
         run: pytest tests/ -q --tb=short
+
+  package:
+    name: Build and inspect distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - name: Test the built wheel
+        run: |
+          python -m venv /tmp/wheel-smoke
+          /tmp/wheel-smoke/bin/pip install --quiet dist/*.whl
+          /tmp/wheel-smoke/bin/python - <<'PY'
+          import pisama_agent_sdk
+          from pisama_agent_sdk.atif import SUPPORTED_SCHEMA_VERSIONS
+
+          assert pisama_agent_sdk.__version__ == "0.2.1"
+          assert "ATIF-v1.7" in SUPPORTED_SCHEMA_VERSIONS
+          PY

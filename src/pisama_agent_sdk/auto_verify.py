@@ -511,7 +511,9 @@ def _post_confirm_applied(
     timeout_s: float,
 ) -> tuple:
     """POST to /api/v1/healing/confirm-applied. Returns (recorded, response_dict)."""
-    base_url = (api_url or os.getenv("PISAMA_API_URL", _DEFAULT_API_URL)).rstrip("/")
+    base_url = (
+        api_url or os.getenv("PISAMA_API_URL") or _DEFAULT_API_URL
+    ).rstrip("/")
     key = api_key or os.getenv("PISAMA_API_KEY", "")
     if not key:
         return (False, {"error": "PISAMA_API_KEY not configured"})

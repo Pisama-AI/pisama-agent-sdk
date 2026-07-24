@@ -32,7 +32,7 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Mapping, Optional, Protocol, Union
 
 logger = logging.getLogger(__name__)
 
@@ -85,10 +85,15 @@ class Resolution:
 # - Slack: post-and-wait on thread reply
 # - Web: store request, return URL, poll DB for answer
 # Function returns (answer_text, index_into_options) or None on timeout.
-AnswerProvider = Callable[[ClarificationRequest], Optional["AnswerProvider.Result"]]
-class _AnswerResult:
+class AnswerResult(Protocol):
+    """Object-form answer accepted from host integrations."""
+
     text: str
     index: Optional[int]
+
+
+AnswerProviderValue = Union[AnswerResult, Mapping[str, Any]]
+AnswerProvider = Callable[[ClarificationRequest], Optional[AnswerProviderValue]]
 
 
 # ---------------------------------------------------------------------
@@ -178,10 +183,10 @@ class ClarificationPrimitive:
             )
 
         text = getattr(result, "text", None) or (
-            result.get("text") if isinstance(result, dict) else None
+            result.get("text") if isinstance(result, Mapping) else None
         )
         index = getattr(result, "index", None)
-        if isinstance(result, dict):
+        if isinstance(result, Mapping):
             index = result.get("index", index)
 
         return Resolution(

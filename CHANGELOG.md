@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Document ATIF, OpenHands, and Harbor-compatible evaluation use cases.
+- Add typed-package metadata, mypy checks, dependency automation, distribution
+  inspection, and clean-wheel smoke testing.
+- Correct nullable endpoint handling and the clarification provider type
+  contract.
+
 ## 0.2.1
 
 - Constrain pisama-core to its compatible major version.

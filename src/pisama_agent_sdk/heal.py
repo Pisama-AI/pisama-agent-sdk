@@ -142,7 +142,9 @@ def heal_now(
     all return an empty `HealingResult` rather than raising; the caller
     falls back to its observe-only path.
     """
-    base_url = (api_url or os.getenv("PISAMA_API_URL", _DEFAULT_API_URL)).rstrip("/")
+    base_url = (
+        api_url or os.getenv("PISAMA_API_URL") or _DEFAULT_API_URL
+    ).rstrip("/")
     key = api_key or os.getenv("PISAMA_API_KEY", "")
     if not key:
         logger.warning("heal_now: PISAMA_API_KEY not set; skipping healing")
