@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.1
+
 - Add a full-package coverage regression gate and security scanning.
 - Declare the MIT license classifier in package metadata.
 - Document ATIF, OpenHands, and Harbor-compatible evaluation use cases.
@@ -18,9 +20,6 @@
 - Make `BridgeConfig.save()` output loadable by `BridgeConfig.from_file()`.
 - Support the documented `configure_bridge(BridgeConfig(...))` call and
   matcher filtering on `PreToolUseHook`.
-
-## 0.2.1
-
 - Constrain pisama-core to its compatible major version.
 - Add Python 3.13 support metadata and release coverage.
 - Pin release actions and stabilize lint configuration.
