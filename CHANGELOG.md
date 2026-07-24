@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a full-package coverage regression gate and security scanning.
+- Declare the MIT license classifier in package metadata.
 - Document ATIF, OpenHands, and Harbor-compatible evaluation use cases.
 - Add typed-package metadata, mypy checks, dependency automation, distribution
   inspection, and clean-wheel smoke testing.
