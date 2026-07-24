@@ -41,7 +41,7 @@ dev = [
     "pytest-timeout>=2.0",
     "httpx>=0.24",
     "ruff>=0.12,<1",
-    "twine>=5.0",
+    "twine>=6.2.0",
 ]
 
 [project.scripts]
