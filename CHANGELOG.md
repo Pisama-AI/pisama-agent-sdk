@@ -7,6 +7,8 @@
   inspection, and clean-wheel smoke testing.
 - Correct nullable endpoint handling and the clarification provider type
   contract.
+- Refresh build, lint, publishing, and GitHub Actions tooling while preserving
+  broad compatibility for optional runtime dependencies.
 
 ## 0.2.1
 
