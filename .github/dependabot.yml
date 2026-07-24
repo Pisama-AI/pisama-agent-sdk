@@ -4,7 +4,18 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    groups:
+      development-tools:
+        dependency-type: development
+    ignore:
+      - dependency-name: posthog
+        update-types:
+          - version-update:semver-major
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      actions:
+        patterns:
+          - "*"
