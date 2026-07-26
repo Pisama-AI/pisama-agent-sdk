@@ -1,6 +1,6 @@
 ## What this changes
 
-<!-- 1–3 sentences. What's different after this PR and why. -->
+<!-- 1 to 3 sentences. What is different after this PR and why? -->
 
 ## Type
 
@@ -14,10 +14,11 @@
 
 - [ ] Clean-venv install works: `pip install .` in a fresh env, the
       affected hook fires on a sample agent run.
-- [ ] Detection calls go through `pisama_core` — no detection logic
+- [ ] Detection calls go through `pisama_core`; no detection logic
       lives in this package.
 - [ ] New hooks disable cleanly when the user opts out.
-- [ ] Existing tests pass: `pytest tests/ -q`.
+- [ ] `ruff`, `mypy`, tests, and the coverage gate pass.
+- [ ] Built wheel and sdist both install in a clean environment.
 - [ ] README hook matrix updated if a new hook point is added.
 
 ## Reproducer or before/after (for bug fixes)

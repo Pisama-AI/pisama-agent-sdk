@@ -1,22 +1,21 @@
-"""Custom tools for Claude Agent SDK integration.
+"""Self-check tool adapters.
 
-Provides pisama_check as a custom tool that agents can call
-for self-verification during execution.
+``create_check_tool`` returns a framework-neutral descriptor.
+``create_claude_check_tool`` and ``create_claude_check_server`` return the
+native objects expected by the current Claude Agent SDK.
 
 Usage with Claude Agent SDK:
-    from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
-    from pisama_agent_sdk import create_check_tool
+    from claude_agent_sdk import ClaudeAgentOptions
+    from pisama_agent_sdk import create_claude_check_server
 
+    server = create_claude_check_server()
     options = ClaudeAgentOptions(
-        custom_tools=[create_check_tool()],
+        mcp_servers={"pisama": server},
+        allowed_tools=["mcp__pisama__pisama_check"],
     )
-
-    async with ClaudeSDKClient(options=options) as client:
-        await client.query("Analyze the auth service incident")
-        async for message in client.receive_response():
-            print(message)
 """
 
+import json
 import logging
 from typing import Any, Dict, Optional
 
@@ -119,19 +118,15 @@ async def pisama_check_handler(
 
 
 def create_check_tool() -> Dict[str, Any]:
-    """Create a pisama_check custom tool definition for Claude Agent SDK.
+    """Create a framework-neutral ``pisama_check`` tool descriptor.
 
-    Returns a dict that can be passed to ClaudeAgentOptions.custom_tools.
+    The current Claude Agent SDK does not accept dictionary descriptors on
+    ``ClaudeAgentOptions``. Use :func:`create_claude_check_server` for that
+    integration.
 
     Returns:
         Tool definition dict with name, description, input_schema, and handler.
 
-    Usage:
-        from pisama_agent_sdk import create_check_tool
-
-        options = ClaudeAgentOptions(
-            custom_tools=[create_check_tool()],
-        )
     """
     return {
         "name": "pisama_check",
@@ -139,3 +134,52 @@ def create_check_tool() -> Dict[str, Any]:
         "input_schema": PISAMA_CHECK_TOOL_SCHEMA,
         "handler": pisama_check_handler,
     }
+
+
+def _require_claude_agent_sdk() -> tuple[Any, Any]:
+    try:
+        from claude_agent_sdk import create_sdk_mcp_server, tool
+    except ImportError as exc:
+        raise ImportError(
+            "Claude Agent SDK integration requires: "
+            'pip install "pisama-agent-sdk[claude]"'
+        ) from exc
+    return tool, create_sdk_mcp_server
+
+
+def create_claude_check_tool() -> Any:
+    """Create a native Claude Agent SDK ``SdkMcpTool``."""
+    tool, _ = _require_claude_agent_sdk()
+
+    @tool(
+        "pisama_check",
+        PISAMA_CHECK_DESCRIPTION,
+        PISAMA_CHECK_TOOL_SCHEMA,
+    )
+    async def _claude_check(input_data: Dict[str, Any]) -> Dict[str, Any]:
+        result = await pisama_check_handler(input_data)
+        return {
+            "content": [
+                {
+                    "type": "text",
+                    "text": json.dumps(result, sort_keys=True),
+                }
+            ],
+            "structuredContent": result,
+        }
+
+    return _claude_check
+
+
+def create_claude_check_server(
+    *,
+    name: str = "pisama",
+    version: str = "1.0.0",
+) -> Any:
+    """Create an in-process MCP server containing ``pisama_check``."""
+    _, create_sdk_mcp_server = _require_claude_agent_sdk()
+    return create_sdk_mcp_server(
+        name=name,
+        version=version,
+        tools=[create_claude_check_tool()],
+    )

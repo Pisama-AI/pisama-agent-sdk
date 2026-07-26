@@ -28,11 +28,8 @@ async def post_tool_use_hook(
     Returns:
         Hook output dict with recovery message if needed
 
-    Example:
-        from pisama_agent_sdk.hooks import post_tool_use_hook
-
-        # Register with Claude Agent SDK
-        agent.hooks.post_tool_use = post_tool_use_hook
+    Register this callback through ``create_claude_hooks()`` or directly in
+    ``ClaudeAgentOptions.hooks``.
     """
     if not tool_use_id:
         logger.debug("PostToolUse called without tool_use_id, skipping")
@@ -67,8 +64,7 @@ class PostToolUseHook:
         # Create hook with custom bridge
         hook = PostToolUseHook(bridge=my_bridge, inject_recovery=True)
 
-        # Register with agent
-        agent.hooks.post_tool_use = hook
+        # Register through create_claude_hooks() or ClaudeAgentOptions.hooks.
     """
 
     def __init__(

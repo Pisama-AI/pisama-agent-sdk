@@ -3,7 +3,7 @@
 Usage:
     from pisama_agent_sdk import PisamaEvaluator
 
-    evaluator = PisamaEvaluator(api_key="psk_...", base_url="https://mao-api.fly.dev")
+    evaluator = PisamaEvaluator(api_key="pisama_...")
 
     result = evaluator.evaluate(
         specification={"text": "Build a login page with OAuth"},
@@ -19,12 +19,23 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+DEFAULT_API_URL = "https://api.pisama.ai"
 
 try:
     import httpx
+
     _HTTPX_AVAILABLE = True
 except ImportError:
     _HTTPX_AVAILABLE = False
+
+
+def _parse_access_token(payload: Any) -> str:
+    token = payload.get("access_token") if isinstance(payload, dict) else None
+    if not isinstance(token, str) or not token.strip():
+        raise ValueError(
+            "Pisama authentication response did not include a valid access_token"
+        )
+    return token.strip()
 
 
 @dataclass
@@ -47,35 +58,86 @@ class EvalResult:
     evaluation_time_ms: int
 
 
+def _build_evaluation_payload(
+    specification: Dict[str, Any],
+    output: Dict[str, Any],
+    agent_role: str,
+    detectors: Optional[List[str]],
+    context_limit: Optional[int],
+) -> Dict[str, Any]:
+    payload: Dict[str, Any] = {
+        "specification": specification,
+        "output": output,
+        "agent_role": agent_role,
+    }
+    if detectors:
+        payload["detectors"] = detectors
+    if context_limit:
+        payload["context_limit"] = context_limit
+    return payload
+
+
+def _parse_evaluation_result(data: Dict[str, Any]) -> EvalResult:
+    failures = [
+        EvalFailure(
+            detector=failure["detector"],
+            confidence=failure["confidence"],
+            severity=failure["severity"],
+            title=failure["title"],
+            description=failure["description"],
+            suggested_fix=failure.get("suggested_fix"),
+        )
+        for failure in data.get("failures", [])
+    ]
+    return EvalResult(
+        passed=data["passed"],
+        score=data["score"],
+        failures=failures,
+        suggestions=data.get("suggestions", []),
+        detectors_run=data.get("detectors_run", []),
+        evaluation_time_ms=data.get("evaluation_time_ms", 0),
+    )
+
+
 class PisamaEvaluator:
     """Client for the Pisama evaluation API.
 
     Args:
-        api_key: Pisama API key (psk_...)
-        base_url: Backend URL (default: https://mao-api.fly.dev)
+        api_key: Pisama API key (pisama_...)
+        base_url: Backend URL (default: https://api.pisama.ai)
         timeout: Request timeout in seconds
     """
 
     def __init__(
         self,
         api_key: str,
-        base_url: str = "https://mao-api.fly.dev",
+        base_url: str = DEFAULT_API_URL,
         timeout: float = 30.0,
     ):
         if not _HTTPX_AVAILABLE:
-            raise ImportError("httpx is required for PisamaEvaluator: pip install httpx")
+            raise ImportError(
+                "httpx is required for PisamaEvaluator: "
+                'pip install "pisama-agent-sdk[evaluator]"'
+            )
+        if not api_key.strip():
+            raise ValueError("api_key must be a non-empty Pisama API key")
 
-        self.api_key = api_key
+        self.api_key = api_key.strip()
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self._client = httpx.Client(
             base_url=self.base_url,
-            headers={
-                "X-MAO-API-Key": self.api_key,
-                "Content-Type": "application/json",
-            },
+            headers={"Content-Type": "application/json"},
             timeout=timeout,
         )
+
+    def _authorization_headers(self) -> Dict[str, str]:
+        response = self._client.post(
+            "/api/v1/auth/token",
+            json={"api_key": self.api_key, "scope": "full"},
+        )
+        response.raise_for_status()
+        return {"Authorization": f"Bearer {_parse_access_token(response.json())}"}
 
     def evaluate(
         self,
@@ -97,40 +159,21 @@ class PisamaEvaluator:
         Returns:
             EvalResult with pass/fail verdict and failure details.
         """
-        payload: Dict[str, Any] = {
-            "specification": specification,
-            "output": output,
-            "agent_role": agent_role,
-        }
-        if detectors:
-            payload["detectors"] = detectors
-        if context_limit:
-            payload["context_limit"] = context_limit
-
-        response = self._client.post("/api/v1/evaluate", json=payload)
-        response.raise_for_status()
-        data = response.json()
-
-        failures = [
-            EvalFailure(
-                detector=f["detector"],
-                confidence=f["confidence"],
-                severity=f["severity"],
-                title=f["title"],
-                description=f["description"],
-                suggested_fix=f.get("suggested_fix"),
-            )
-            for f in data.get("failures", [])
-        ]
-
-        return EvalResult(
-            passed=data["passed"],
-            score=data["score"],
-            failures=failures,
-            suggestions=data.get("suggestions", []),
-            detectors_run=data.get("detectors_run", []),
-            evaluation_time_ms=data.get("evaluation_time_ms", 0),
+        payload = _build_evaluation_payload(
+            specification,
+            output,
+            agent_role,
+            detectors,
+            context_limit,
         )
+
+        response = self._client.post(
+            "/api/v1/evaluate",
+            json=payload,
+            headers=self._authorization_headers(),
+        )
+        response.raise_for_status()
+        return _parse_evaluation_result(response.json())
 
     async def evaluate_async(
         self,
@@ -141,55 +184,43 @@ class PisamaEvaluator:
         context_limit: Optional[int] = None,
     ) -> EvalResult:
         """Async version of evaluate()."""
-        payload: Dict[str, Any] = {
-            "specification": specification,
-            "output": output,
-            "agent_role": agent_role,
-        }
-        if detectors:
-            payload["detectors"] = detectors
-        if context_limit:
-            payload["context_limit"] = context_limit
+        payload = _build_evaluation_payload(
+            specification,
+            output,
+            agent_role,
+            detectors,
+            context_limit,
+        )
 
         async with httpx.AsyncClient(
             base_url=self.base_url,
-            headers={
-                "X-MAO-API-Key": self.api_key,
-                "Content-Type": "application/json",
-            },
+            headers={"Content-Type": "application/json"},
             timeout=self.timeout,
         ) as client:
-            response = await client.post("/api/v1/evaluate", json=payload)
-            response.raise_for_status()
-            data = response.json()
-
-        failures = [
-            EvalFailure(
-                detector=f["detector"],
-                confidence=f["confidence"],
-                severity=f["severity"],
-                title=f["title"],
-                description=f["description"],
-                suggested_fix=f.get("suggested_fix"),
+            token_response = await client.post(
+                "/api/v1/auth/token",
+                json={"api_key": self.api_key, "scope": "full"},
             )
-            for f in data.get("failures", [])
-        ]
+            token_response.raise_for_status()
+            headers = {
+                "Authorization": (
+                    f"Bearer {_parse_access_token(token_response.json())}"
+                )
+            }
+            response = await client.post(
+                "/api/v1/evaluate",
+                json=payload,
+                headers=headers,
+            )
+            response.raise_for_status()
+            return _parse_evaluation_result(response.json())
 
-        return EvalResult(
-            passed=data["passed"],
-            score=data["score"],
-            failures=failures,
-            suggestions=data.get("suggestions", []),
-            detectors_run=data.get("detectors_run", []),
-            evaluation_time_ms=data.get("evaluation_time_ms", 0),
-        )
-
-    def close(self):
+    def close(self) -> None:
         """Close the underlying HTTP client."""
         self._client.close()
 
-    def __enter__(self):
+    def __enter__(self) -> "PisamaEvaluator":
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any) -> None:
         self.close()

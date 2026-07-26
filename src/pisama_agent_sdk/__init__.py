@@ -3,11 +3,11 @@
 Provides hooks and tools for Claude Agent SDK that connect to
 Pisama's detection infrastructure for real-time failure prevention.
 
-Quick Start (passive monitoring):
-    from pisama_agent_sdk import pre_tool_use_hook, post_tool_use_hook
+Quick Start (Claude Agent SDK hooks):
+    from claude_agent_sdk import ClaudeAgentOptions
+    from pisama_agent_sdk import create_claude_hooks
 
-    agent.hooks.pre_tool_use = pre_tool_use_hook
-    agent.hooks.post_tool_use = post_tool_use_hook
+    options = ClaudeAgentOptions(hooks=create_claude_hooks())
 
 Agent Self-Check (active verification):
     from pisama_agent_sdk import check
@@ -20,15 +20,22 @@ Agent Self-Check (active verification):
         # Revise output based on result["issues"]
 
 Claude Agent SDK Custom Tool:
-    from pisama_agent_sdk import create_check_tool
+    from pisama_agent_sdk import create_claude_check_server
     from claude_agent_sdk import ClaudeAgentOptions
 
+    server = create_claude_check_server()
     options = ClaudeAgentOptions(
-        custom_tools=[create_check_tool()],
+        mcp_servers={"pisama": server},
+        allowed_tools=["mcp__pisama__pisama_check"],
     )
 """
 
-__version__ = "0.2.1"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("pisama-agent-sdk")
+except PackageNotFoundError:
+    __version__ = "0+unknown"
 
 # Hook functions (primary API)
 # ATIF (Harbor) trajectory analysis
@@ -88,6 +95,7 @@ from .evaluator import EvalFailure, EvalResult, PisamaEvaluator
 
 # In-loop healing (Track B)
 from .heal import HealingResult, heal_now
+from .hooks import create_claude_hooks
 
 # Matchers
 from .hooks.matchers import (
@@ -122,7 +130,12 @@ from .openhands_adapter import (
 from .session import SessionManager, session_manager
 
 # Custom tools for Claude Agent SDK
-from .tools import create_check_tool, pisama_check_handler
+from .tools import (
+    create_check_tool,
+    create_claude_check_server,
+    create_claude_check_tool,
+    pisama_check_handler,
+)
 
 # Types
 from .types import BridgeResult, HookContext, HookInput, HookJSONOutput
@@ -136,6 +149,7 @@ __all__ = [
     # Hook classes
     "PreToolUseHook",
     "PostToolUseHook",
+    "create_claude_hooks",
     # Configuration
     "configure_bridge",
     "create_bridge",
@@ -186,6 +200,8 @@ __all__ = [
     "AutoVerifyResult",
     # Custom tools
     "create_check_tool",
+    "create_claude_check_tool",
+    "create_claude_check_server",
     "pisama_check_handler",
     # Evaluator
     "PisamaEvaluator",

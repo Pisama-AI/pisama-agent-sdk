@@ -82,7 +82,7 @@ async def pre_tool_use_hook(
     """PreToolUse hook for real-time failure prevention.
 
     Default behaviour is observe-and-block: detection runs, severe
-    findings return `permissionDecision: block`. When `auto_heal=True`
+    findings return `permissionDecision: deny`. When `auto_heal=True`
     (or `PISAMA_AUTO_HEAL=1` in env), a SAFE-risk fix is fetched
     synchronously via `heal_now()` and surfaced as a `permissionDecision:
     deny` plus systemMessage patch — Claude SDK and LangGraph naturally
@@ -166,8 +166,7 @@ class PreToolUseHook:
         # Create hook with custom bridge
         hook = PreToolUseHook(bridge=bridge, fail_open=True)
 
-        # Register with agent
-        agent.hooks.pre_tool_use = hook
+        # Register through create_claude_hooks() or ClaudeAgentOptions.hooks.
     """
 
     def __init__(

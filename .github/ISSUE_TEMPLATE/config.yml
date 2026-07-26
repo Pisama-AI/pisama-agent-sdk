@@ -3,6 +3,6 @@ contact_links:
   - name: Documentation
     url: https://docs.pisama.ai/agent-sdk
     about: Check the documentation for usage guides and examples
-  - name: Discussions
-    url: https://github.com/tn-pisama/pisama-agent-sdk/discussions
-    about: Ask questions and discuss ideas with the community
+  - name: Ask a question
+    url: https://github.com/Pisama-AI/pisama-agent-sdk/issues/new?template=question.yml
+    about: Ask for help with installation, hooks, adapters, or configuration

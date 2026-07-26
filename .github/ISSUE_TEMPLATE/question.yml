@@ -1,0 +1,66 @@
+name: Support Question
+description: Ask for help with pisama-agent-sdk
+title: "[Question]: "
+labels: ["question"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please remove API keys, tokens, trace contents, and other sensitive data before submitting.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What are you trying to accomplish, and where are you blocked?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: integration
+    attributes:
+      label: Integration
+      options:
+        - Claude Agent SDK hooks
+        - Claude self-check tool
+        - ATIF or Harbor
+        - OpenHands
+        - Evaluator client
+        - Local detector bridge
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: sdk-version
+    attributes:
+      label: pisama-agent-sdk version
+      description: Run `python -m pip show pisama-agent-sdk`.
+      placeholder: "0.2.1"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Run `python --version`.
+      placeholder: "3.12.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Relevant output
+      description: Include the shortest safe output that explains the problem.
+      render: shell
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed API keys, tokens, and sensitive trace contents.
+          required: true

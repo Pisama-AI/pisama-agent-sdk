@@ -1,4 +1,4 @@
-"""Detection Bridge - connects Agent SDK hooks to MAO detection."""
+"""Detection Bridge connecting agent SDK hooks to Pisama detection."""
 
 import asyncio
 import logging
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class DetectionBridge:
-    """Bridge between Agent SDK hooks and MAO detection.
+    """Bridge between agent SDK hooks and Pisama detection.
 
     This is the core integration layer that:
     1. Converts HookInput to Span format
@@ -36,7 +36,7 @@ class DetectionBridge:
         # PreToolUse hook
         result = await bridge.analyze_pre_tool(hook_input, tool_use_id)
         if result.should_block:
-            return {"permissionDecision": "block", ...}
+            return {"permissionDecision": "deny", ...}
 
         # PostToolUse hook
         result = await bridge.analyze_post_tool(hook_input, tool_use_id)
@@ -436,7 +436,7 @@ class DetectionBridge:
         issue_text = "\n".join(f"- {i}" for i in issues[:3])
 
         if blocked:
-            return f"""[MAO Detection: BLOCKED]
+            return f"""[Pisama Detection: BLOCKED]
 Severity: {severity}/100
 
 Issues detected:
@@ -445,7 +445,7 @@ Issues detected:
 This tool call has been blocked. Please try a different approach.
 Consider: stopping repetitive patterns, changing strategy, or asking the user for guidance."""
         else:
-            return f"""[MAO Detection: Warning]
+            return f"""[Pisama Detection: Warning]
 Severity: {severity}/100
 
 Issues detected:
@@ -484,7 +484,7 @@ Consider adjusting your approach to avoid potential failure patterns."""
                     f"- {r}" for r in rec_lines
                 )
 
-        return f"""[MAO Detection: Recovery Guidance]
+        return f"""[Pisama Detection: Recovery Guidance]
 Severity: {severity}/100
 
 Pattern detected:
@@ -504,7 +504,7 @@ Adjust your approach to prevent this pattern from continuing."""
         """
         reason = self.sessions.get_block_reason(session_id) or "repeated violations"
 
-        return f"""[MAO Detection: Session Blocked]
+        return f"""[Pisama Detection: Session Blocked]
 This session has been blocked due to: {reason}
 
 To continue, the user must acknowledge and reset the session."""

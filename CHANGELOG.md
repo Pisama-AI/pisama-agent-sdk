@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Add native Claude Agent SDK hook and MCP tool factories, with real contract
+  tests against the supported Claude SDK range.
+- Emit the Claude Agent SDK `deny` decision for blocked tool calls.
+- Point the evaluator client at `api.pisama.ai` and exchange API keys for the
+  bearer tokens required by the current evaluator endpoint.
+- Replace non-functional public examples, legacy repository links, and the
+  broken Discussions support link.
+- Add bounded optional dependencies, minimum `pisama-core` compatibility
+  coverage, and stronger wheel and sdist smoke tests.
+- Derive the runtime version from installed distribution metadata to prevent
+  package and module version drift.
+- Add dependency vulnerability auditing, explicit code ownership, and a
+  working support-question path.
+
 ## 0.2.1
 
 - Add a full-package coverage regression gate and security scanning.

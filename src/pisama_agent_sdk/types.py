@@ -44,8 +44,8 @@ class HookContext(TypedDict, total=False):
     session_id: str
 
 
-# Permission decision for PreToolUse
-PermissionDecision = Literal["allow", "block"]
+# Permission decisions accepted by the Claude Agent SDK PreToolUse contract.
+PermissionDecision = Literal["allow", "deny", "ask", "defer"]
 
 
 class HookSpecificOutput(TypedDict, total=False):
@@ -118,8 +118,10 @@ class BridgeResult:
         if self.should_block:
             output["hookSpecificOutput"] = {
                 "hookEventName": "PreToolUse",
-                "permissionDecision": "block",
-                "permissionDecisionReason": self.block_reason or "Blocked by MAO detection",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": (
+                    self.block_reason or "Blocked by Pisama detection"
+                ),
             }
 
         if self.system_message:
