@@ -37,7 +37,7 @@ body:
     attributes:
       label: pisama-agent-sdk version
       description: Run `python -m pip show pisama-agent-sdk`.
-      placeholder: "0.2.1"
+      placeholder: "0.2.2"
     validations:
       required: true
 

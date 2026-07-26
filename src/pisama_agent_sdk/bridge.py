@@ -41,7 +41,13 @@ class DetectionBridge:
         # PostToolUse hook
         result = await bridge.analyze_post_tool(hook_input, tool_use_id)
         if result.system_message:
-            return {"systemMessage": result.system_message}
+            return {
+                "hookSpecificOutput": {
+                    "hookEventName": "PostToolUse",
+                    "additionalContext": result.system_message,
+                },
+                "systemMessage": result.system_message,
+            }
     """
 
     def __init__(

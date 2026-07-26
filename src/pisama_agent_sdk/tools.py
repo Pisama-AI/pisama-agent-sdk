@@ -165,7 +165,6 @@ def create_claude_check_tool() -> Any:
                     "text": json.dumps(result, sort_keys=True),
                 }
             ],
-            "structuredContent": result,
         }
 
     return _claude_check

@@ -83,8 +83,9 @@ class HealingResult:
            generator — production agents want the snippet, not the prose.
         3. `rationale` / `description` / `title` as last-resort prose.
 
-        The SDK's PreToolUse hook surfaces this directly as the
-        `systemMessage` on a `permissionDecision: deny` payload.
+        The SDK's PreToolUse hook surfaces this as model-facing
+        ``additionalContext`` and mirrors it as ``systemMessage`` for the user
+        on a ``permissionDecision: deny`` payload.
         """
         if not self.fix:
             return None

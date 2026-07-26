@@ -14,12 +14,19 @@ Usage:
             print(f"{failure.detector}: {failure.description}")
 """
 
+import asyncio
+import base64
+import json
 import logging
+import threading
+import time
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 DEFAULT_API_URL = "https://api.pisama.ai"
+_TOKEN_REFRESH_SKEW_SECONDS = 30.0
+_TOKEN_FALLBACK_TTL_SECONDS = 300.0
 
 try:
     import httpx
@@ -36,6 +43,40 @@ def _parse_access_token(payload: Any) -> str:
             "Pisama authentication response did not include a valid access_token"
         )
     return token.strip()
+
+
+def _access_token_expiry(payload: Any, token: str) -> float:
+    """Return a conservative Unix expiry for a token response.
+
+    The Pisama token endpoint returns a JWT whose ``exp`` claim is the
+    authoritative expiry. ``expires_in`` is also accepted for compatible
+    deployments. Opaque tokens get a short fallback TTL and are still
+    refreshed immediately when the API returns 401.
+    """
+    try:
+        encoded_payload = token.split(".")[1]
+        padding = "=" * (-len(encoded_payload) % 4)
+        claims = json.loads(
+            base64.urlsafe_b64decode(encoded_payload + padding).decode("utf-8")
+        )
+        expires_at = claims.get("exp") if isinstance(claims, dict) else None
+        if (
+            isinstance(expires_at, (int, float))
+            and not isinstance(expires_at, bool)
+            and expires_at > 0
+        ):
+            return float(expires_at)
+    except (IndexError, UnicodeDecodeError, ValueError, json.JSONDecodeError):
+        pass
+
+    expires_in = payload.get("expires_in") if isinstance(payload, dict) else None
+    if (
+        isinstance(expires_in, (int, float))
+        and not isinstance(expires_in, bool)
+        and expires_in > 0
+    ):
+        return time.time() + float(expires_in)
+    return time.time() + _TOKEN_FALLBACK_TTL_SECONDS
 
 
 @dataclass
@@ -130,14 +171,53 @@ class PisamaEvaluator:
             headers={"Content-Type": "application/json"},
             timeout=timeout,
         )
+        self._access_token: Optional[str] = None
+        self._access_token_expires_at = 0.0
+        self._token_state_lock = threading.Lock()
+        self._authentication_lock = threading.Lock()
+
+    def _cached_access_token(self) -> Optional[str]:
+        with self._token_state_lock:
+            if (
+                self._access_token
+                and self._access_token_expires_at
+                > time.time() + _TOKEN_REFRESH_SKEW_SECONDS
+            ):
+                return self._access_token
+        return None
+
+    def _cache_access_token(self, payload: Any) -> str:
+        token = _parse_access_token(payload)
+        expires_at = _access_token_expiry(payload, token)
+        with self._token_state_lock:
+            self._access_token = token
+            self._access_token_expires_at = expires_at
+        return token
+
+    def _invalidate_access_token(self, token: Optional[str] = None) -> None:
+        """Discard ``token`` without clearing a concurrent newer credential."""
+        with self._token_state_lock:
+            if token is None or token == self._access_token:
+                self._access_token = None
+                self._access_token_expires_at = 0.0
 
     def _authorization_headers(self) -> Dict[str, str]:
-        response = self._client.post(
-            "/api/v1/auth/token",
-            json={"api_key": self.api_key, "scope": "full"},
-        )
-        response.raise_for_status()
-        return {"Authorization": f"Bearer {_parse_access_token(response.json())}"}
+        token = self._cached_access_token()
+        if token is None:
+            with self._authentication_lock:
+                token = self._cached_access_token()
+                if token is None:
+                    response = self._client.post(
+                        "/api/v1/auth/token",
+                        json={"api_key": self.api_key, "scope": "full"},
+                    )
+                    response.raise_for_status()
+                    token = self._cache_access_token(response.json())
+        return {"Authorization": f"Bearer {token}"}
+
+    @staticmethod
+    def _header_token(headers: Dict[str, str]) -> str:
+        return headers["Authorization"].removeprefix("Bearer ")
 
     def evaluate(
         self,
@@ -167,11 +247,19 @@ class PisamaEvaluator:
             context_limit,
         )
 
+        headers = self._authorization_headers()
         response = self._client.post(
             "/api/v1/evaluate",
             json=payload,
-            headers=self._authorization_headers(),
+            headers=headers,
         )
+        if response.status_code == 401:
+            self._invalidate_access_token(self._header_token(headers))
+            response = self._client.post(
+                "/api/v1/evaluate",
+                json=payload,
+                headers=self._authorization_headers(),
+            )
         response.raise_for_status()
         return _parse_evaluation_result(response.json())
 
@@ -197,21 +285,20 @@ class PisamaEvaluator:
             headers={"Content-Type": "application/json"},
             timeout=self.timeout,
         ) as client:
-            token_response = await client.post(
-                "/api/v1/auth/token",
-                json={"api_key": self.api_key, "scope": "full"},
-            )
-            token_response.raise_for_status()
-            headers = {
-                "Authorization": (
-                    f"Bearer {_parse_access_token(token_response.json())}"
-                )
-            }
+            headers = await asyncio.to_thread(self._authorization_headers)
             response = await client.post(
                 "/api/v1/evaluate",
                 json=payload,
                 headers=headers,
             )
+            if response.status_code == 401:
+                self._invalidate_access_token(self._header_token(headers))
+                headers = await asyncio.to_thread(self._authorization_headers)
+                response = await client.post(
+                    "/api/v1/evaluate",
+                    json=payload,
+                    headers=headers,
+                )
             response.raise_for_status()
             return _parse_evaluation_result(response.json())
 

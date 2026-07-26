@@ -29,7 +29,7 @@ def create_claude_hooks(
 ) -> dict[str, list[Any]]:
     """Build a hooks mapping accepted by ``ClaudeAgentOptions``.
 
-    The Pisama ``HookMatcher`` filters calls inside the detector bridge.
+    The Pisama ``HookMatcher`` filters both callbacks before detector analysis.
     ``sdk_matcher`` is the Claude Agent SDK matcher expression used before
     the callback is invoked. Keeping the two explicit avoids confusing the
     similarly named matcher types from each package.
@@ -54,6 +54,7 @@ def create_claude_hooks(
     post_hook = PostToolUseHook(
         bridge=bridge or pre_hook.bridge,
         inject_recovery=inject_recovery,
+        matcher=tool_matcher,
     )
     return {
         "PreToolUse": [

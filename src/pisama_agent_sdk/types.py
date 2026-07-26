@@ -55,6 +55,7 @@ class HookSpecificOutput(TypedDict, total=False):
     permissionDecision: PermissionDecision
     permissionDecisionReason: str
     updatedInput: dict[str, Any]
+    additionalContext: str
 
 
 class HookJSONOutput(TypedDict, total=False):
@@ -64,7 +65,7 @@ class HookJSONOutput(TypedDict, total=False):
     """
 
     hookSpecificOutput: HookSpecificOutput
-    systemMessage: str  # Inject message into conversation
+    systemMessage: str  # Surface a message to the user
     error: str  # Error message if hook fails
     continue_: bool  # Whether agent should continue (use 'continue' in actual dict)
     suppressOutput: bool  # Hide from transcript

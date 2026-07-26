@@ -44,8 +44,9 @@ def _heal_output(healing: HealingResult) -> dict[str, Any]:
 
     `deny` (vs `block`) signals to Claude SDK and LangGraph that the
     current step is rejected but the agent may proceed after taking the
-    `systemMessage` into account — which is exactly the in-loop self-heal
-    semantics. If we returned `block`, the agent would stop hard.
+    hook's additional context into account. ``systemMessage`` mirrors the
+    patch for user visibility; Claude receives the actionable patch through
+    ``hookSpecificOutput.additionalContext``.
     """
     patch = healing.prompt_patch or "Pisama applied a SAFE in-loop fix; retry with the adjusted context."
     return {
@@ -53,8 +54,10 @@ def _heal_output(healing: HealingResult) -> dict[str, Any]:
             "hookEventName": "PreToolUse",
             "permissionDecision": "deny",
             "permissionDecisionReason": (
-                "Pisama auto-healed in-loop (SAFE fix). Retry with the patched system message."
+                "Pisama denied this invocation after applying a SAFE fix. "
+                "Retry using the supplied additional context."
             ),
+            "additionalContext": patch,
         },
         "systemMessage": patch,
     }
@@ -85,8 +88,9 @@ async def pre_tool_use_hook(
     findings return `permissionDecision: deny`. When `auto_heal=True`
     (or `PISAMA_AUTO_HEAL=1` in env), a SAFE-risk fix is fetched
     synchronously via `heal_now()` and surfaced as a `permissionDecision:
-    deny` plus systemMessage patch — Claude SDK and LangGraph naturally
-    retry the step with the patched context, breaking the loop in-loop.
+    deny` plus additional context for the model and a system message for
+    the user. Claude SDK and LangGraph can then retry the step with the
+    patched context, breaking the loop in-loop.
     DANGEROUS fixes still block; the systemMessage carries an approval URL.
 
     Args:

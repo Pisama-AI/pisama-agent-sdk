@@ -108,7 +108,8 @@ hooks = create_claude_hooks(
 ```
 
 Built-in Pisama matchers are `ALL_TOOLS`, `FILE_TOOLS`, `SHELL_TOOLS`,
-`DANGEROUS_COMMANDS`, and `AGENT_TOOLS`.
+`DANGEROUS_COMMANDS`, and `AGENT_TOOLS`. A `tool_matcher` filters both pre-tool
+prevention and post-tool recovery processing.
 
 ## Claude self-check tool
 
@@ -127,9 +128,9 @@ options = ClaudeAgentOptions(
 )
 ```
 
-The tool returns both text and structured content. `create_check_tool()` remains
-available as a framework-neutral dictionary descriptor for hosts that accept
-that shape.
+The current Claude Agent SDK MCP helper preserves the result as JSON text.
+`create_check_tool()` remains available as a framework-neutral dictionary
+descriptor for hosts that accept that shape.
 
 ## Direct self-check
 
@@ -193,8 +194,9 @@ with PisamaEvaluator(api_key="pisama_...") as evaluator:
 print(result.passed, result.failures)
 ```
 
-The client exchanges the API key for a short-lived bearer token before calling
-the evaluator endpoint.
+The client exchanges the API key for a short-lived bearer token, reuses that
+token across evaluations, and refreshes it before expiry or once after an
+authorization failure.
 
 ## Network and data behavior
 

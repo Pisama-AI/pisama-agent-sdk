@@ -105,7 +105,7 @@ jobs:
           from pisama_agent_sdk.atif import SUPPORTED_SCHEMA_VERSIONS
 
           assert version("pisama-agent-sdk") == pisama_agent_sdk.__version__
-          assert pisama_agent_sdk.__version__ == "0.2.1"
+          assert pisama_agent_sdk.__version__ == "0.2.2"
           assert "ATIF-v1.7" in SUPPORTED_SCHEMA_VERSIONS
 
           hooks = pisama_agent_sdk.create_claude_hooks()
