@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pisama-agent-sdk"
-version = "0.2.1"
+version = "0.2.2"
 description = "ATIF trace adapters and real-time failure hooks for agent runtimes"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,10 +17,12 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
 ]
 
 dependencies = [
@@ -28,20 +30,27 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+claude = [
+    "claude-agent-sdk>=0.2.128,<0.3",
+]
 evaluator = [
-    "httpx>=0.24",
+    "httpx>=0.24,<1",
 ]
 telemetry = [
-    "posthog>=3.0",
+    "posthog>=3.0,<8",
+]
+verification = [
+    "anthropic>=0.120,<1",
 ]
 dev = [
     "build>=1.5",
+    "claude-agent-sdk>=0.2.128,<0.3",
     "mypy>=1.8",
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
     "pytest-cov>=5.0",
     "pytest-timeout>=2.0",
-    "httpx>=0.24",
+    "httpx>=0.24,<1",
     "ruff>=0.16,<1",
     "twine>=6.2",
 ]
@@ -57,6 +66,7 @@ Documentation = "https://docs.pisama.ai/agent-sdk"
 Repository = "https://github.com/Pisama-AI/pisama-agent-sdk"
 Issues = "https://github.com/Pisama-AI/pisama-agent-sdk/issues"
 Changelog = "https://github.com/Pisama-AI/pisama-agent-sdk/blob/main/CHANGELOG.md"
+Security = "https://github.com/Pisama-AI/pisama-agent-sdk/security/policy"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pisama_agent_sdk"]

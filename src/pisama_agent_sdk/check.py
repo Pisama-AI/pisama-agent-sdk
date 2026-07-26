@@ -34,7 +34,7 @@ def configure_check(api_url: str) -> None:
     """Configure the check function to use a specific API URL.
 
     Args:
-        api_url: Base URL of the Pisama backend (e.g., "https://mao-api.fly.dev")
+        api_url: Base URL of the Pisama backend (e.g., "https://api.pisama.ai")
     """
     global _api_url
     _api_url = api_url.rstrip("/")

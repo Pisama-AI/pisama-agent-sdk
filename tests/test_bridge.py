@@ -65,15 +65,15 @@ class TestBridgeResult:
         output = result.to_hook_output()
         assert output == {}
 
-    def test_to_hook_output_block(self):
-        """Should return block decision when blocking."""
+    def test_to_hook_output_deny(self):
+        """Should return the Claude Agent SDK deny decision when blocking."""
         result = BridgeResult(
             should_block=True,
             block_reason="Loop detected",
         )
         output = result.to_hook_output()
         assert "hookSpecificOutput" in output
-        assert output["hookSpecificOutput"]["permissionDecision"] == "block"
+        assert output["hookSpecificOutput"]["permissionDecision"] == "deny"
 
     def test_to_hook_output_with_message(self):
         """Should include system message when present."""

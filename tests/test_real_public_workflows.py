@@ -198,7 +198,7 @@ async def test_function_hooks_process_captured_calls_through_configured_bridge()
         )
 
     assert outputs[0].get("systemMessage")
-    assert outputs[-1]["hookSpecificOutput"]["permissionDecision"] == "block"
+    assert outputs[-1]["hookSpecificOutput"]["permissionDecision"] == "deny"
     assert "repeated 3x" in outputs[-1]["systemMessage"]
 
     post = await post_tool_use_hook(

@@ -234,10 +234,12 @@ def _build_claude_agent_callable(
             logger.info("auto_verify: Claude call failed (%s)", exc)
             return ""
         try:
-            return "".join(
-                block.text for block in message.content
-                if getattr(block, "type", None) == "text"
-            )
+            text_parts: List[str] = []
+            for block in message.content:
+                text = getattr(block, "text", None)
+                if getattr(block, "type", None) == "text" and isinstance(text, str):
+                    text_parts.append(text)
+            return "".join(text_parts)
         except Exception:
             return ""
 

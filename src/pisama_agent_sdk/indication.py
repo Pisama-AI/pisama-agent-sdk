@@ -1,12 +1,11 @@
 """SDK-side indication channel — out-of-band signal for the developer.
 
-The PreToolUse hook injects `systemMessage` payloads for the *agent*
-to consume. That signals the agent but leaves the *developer* running
-the agent blind unless they tail logs. This module fills the gap: a
-registered `on_indication` callback fires once per healing outcome
-with the same `UserIndication` structure the backend produces, so the
-developer can wire it to their own logging / observability / desktop
-notification / paging surface.
+The PreToolUse hook sends ``additionalContext`` to the agent and mirrors the
+patch as ``systemMessage`` for user visibility. This module provides a
+separate developer-facing channel: a registered ``on_indication`` callback
+fires once per healing outcome with the same ``UserIndication`` structure
+the backend produces, so the developer can wire it to their own logging,
+observability, desktop notification, or paging surface.
 
 Usage:
     from pisama_agent_sdk import on_indication

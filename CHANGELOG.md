@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+## 0.2.2
+
+- Add native Claude Agent SDK hook and MCP tool factories, with real contract
+  tests against the supported Claude SDK range.
+- Emit the Claude Agent SDK `deny` decision for blocked tool calls.
+- Deliver SAFE auto-heal patches and post-tool recovery guidance through the
+  Claude Agent SDK model-context contract.
+- Cache evaluator bearer tokens, refresh them near expiry or after a 401, and
+  avoid repeated authentication during evaluation sequences.
+- Apply Pisama tool matchers consistently to pre-tool and post-tool processing.
+- Document JSON text as the current Claude MCP result contract and exercise the
+  complete in-process MCP server boundary.
+- Point the evaluator client at `api.pisama.ai` and exchange API keys for the
+  bearer tokens required by the current evaluator endpoint.
+- Replace non-functional public examples, legacy repository links, and the
+  broken Discussions support link.
+- Add bounded optional dependencies, minimum `pisama-core` compatibility
+  coverage, and stronger wheel and sdist smoke tests.
+- Derive the runtime version from installed distribution metadata to prevent
+  package and module version drift.
+- Add dependency vulnerability auditing, explicit code ownership, and a
+  working support-question path.
+
 ## 0.2.1
 
 - Add a full-package coverage regression gate and security scanning.

@@ -1,7 +1,7 @@
 name: Bug Report
 description: Report a bug or unexpected behavior in pisama-agent-sdk
 title: "[Bug]: "
-labels: ["bug", "triage"]
+labels: ["bug"]
 
 body:
   - type: markdown
@@ -44,7 +44,7 @@ body:
     attributes:
       label: pisama-agent-sdk Version
       description: Run `pip show pisama-agent-sdk` to find the version.
-      placeholder: "0.1.2"
+      placeholder: "0.2.2"
     validations:
       required: true
 
