@@ -28,7 +28,7 @@ Claude Agent SDK Custom Tool:
     )
 """
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 # Hook functions (primary API)
 # ATIF (Harbor) trajectory analysis
@@ -42,9 +42,6 @@ from .atif import (
 # Auto-verify (Track H3) — runs an innovation primitive locally with a
 # real Claude client when the backend surfaces a recommended_verification
 # hint, then POSTs the outcome back to /healing/confirm-applied so
-# FixEffectivenessTracker accumulates real efficacy data alongside the
-# async-verification scheduler.
-from .auto_verify import AutoVerifyResult, auto_verify_and_confirm
 
 # Configuration
 # Bridge (for advanced use)
@@ -181,9 +178,6 @@ __all__ = [
     "SDKIndication",
     "on_indication",
     "clear_indication_callbacks",
-    # Auto-verify (Track H3)
-    "auto_verify_and_confirm",
-    "AutoVerifyResult",
     # Custom tools
     "create_check_tool",
     "pisama_check_handler",

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pisama-agent-sdk"
-version = "0.2.1"
+version = "0.3.0"
 description = "ATIF trace adapters and real-time failure hooks for agent runtimes"
 readme = "README.md"
 requires-python = ">=3.10"

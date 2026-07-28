@@ -18,7 +18,6 @@ from pisama_agent_sdk import (
     PostToolUseHook,
     PreToolUseHook,
     SessionManager,
-    auto_verify_and_confirm,
     check,
     configure_bridge,
     heal_now,
@@ -347,15 +346,3 @@ def test_clarification_primitive_resolves_entity_confusion() -> None:
     assert resolution.answer_index == 0
 
 
-def test_auto_verify_reports_missing_recommendation_without_external_calls() -> None:
-    result = auto_verify_and_confirm(
-        healing=HealingResult(
-            applied=False,
-            escalated=False,
-            risk_level="unknown",
-        ),
-        detection_type="loop",
-    )
-    assert result.applied is False
-    assert result.primitive == ""
-    assert result.rationale == "No recommended_verification on HealingResult."
