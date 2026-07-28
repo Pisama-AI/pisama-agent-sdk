@@ -41,7 +41,6 @@ from .atif import (
 
 # Auto-verify removed in 0.3.0: it vendored private backend verification
 # primitives into this MIT package. Verification is a hosted-service concern.
-
 # Configuration
 # Bridge (for advanced use)
 from .bridge import DetectionBridge, configure_bridge, create_bridge, get_bridge
