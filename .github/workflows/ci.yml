@@ -57,8 +57,17 @@ jobs:
           /tmp/wheel-smoke/bin/pip install --quiet dist/*.whl
           /tmp/wheel-smoke/bin/python - <<'PY'
           import pisama_agent_sdk
+          from importlib.metadata import version
           from pisama_agent_sdk.atif import SUPPORTED_SCHEMA_VERSIONS
 
-          assert pisama_agent_sdk.__version__ == "0.2.1"
+          # Assert the invariant, not a literal: __version__ must match the
+          # version the wheel was actually built with. A hardcoded string here
+          # fails on every release and teaches people to edit CI to go green,
+          # while missing the bug that matters -- __init__.__version__ drifting
+          # from pyproject (which happened during the 0.3.0 bump).
+          assert pisama_agent_sdk.__version__ == version("pisama-agent-sdk"), (
+              f"__version__ {pisama_agent_sdk.__version__} != packaged "
+              f"{version('pisama-agent-sdk')}"
+          )
           assert "ATIF-v1.7" in SUPPORTED_SCHEMA_VERSIONS
           PY
