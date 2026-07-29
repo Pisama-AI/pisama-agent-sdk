@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.3.2] - 2026-07-29
+
+### Fixed
+
+- The README linked the Claude Agent SDK at
+  `github.com/anthropics/claude-code/tree/main/packages/claude-agent-sdk`, which
+  returns 404. Upstream moved the Python SDK to its own repository. The link now
+  points at `github.com/anthropics/claude-agent-sdk-python`, which is also the
+  `Homepage` in the `claude-agent-sdk` PyPI metadata. PyPI renders the README from
+  the published artifact, so this needs a release to reach the people who read it.
+
+### Changed
+
+- Declare the licence as the PEP 639 SPDX expression `license = "MIT"` with
+  `license-files = ["LICENSE"]`, replacing the deprecated `{text = "MIT"}` table.
+  The wheel now carries `License-Expression: MIT` and `License-File: LICENSE`
+  instead of the free-text `License` field.
+- Drop the `License :: OSI Approved :: MIT License` trove classifier. The
+  `pyproject.toml` specification deprecates `License ::` classifiers and permits
+  build tools to reject a project that sets both them and an SPDX expression;
+  setuptools already errors on that combination. The licence is not lost, it moves
+  into `License-Expression`.
+- Require `hatchling>=1.27` to build, the first release line that emits core
+  metadata 2.4 and reads `license-files` as a list of glob patterns.
+
 ## [0.3.1] - 2026-07-29
 
 ### Security
