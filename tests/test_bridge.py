@@ -227,9 +227,19 @@ class TestDetectionBridge:
 
     @pytest.fixture
     def mock_orchestrator(self):
-        """Create mock orchestrator."""
+        """Create mock orchestrator.
+
+        Patches ``pisama.agents.bridge.DetectionOrchestrator``, not
+        ``pisama_agent_sdk.bridge.DetectionOrchestrator``: as of
+        pisama-agent-sdk 0.4.0, ``DetectionBridge`` is defined in (and
+        looks up ``DetectionOrchestrator`` via the globals of)
+        ``pisama.agents.bridge`` -- the shim module never binds that
+        name at all, so patching it there would not affect the
+        ``DetectionOrchestrator()`` call inside ``DetectionBridge.
+        __init__``.
+        """
         with patch(
-            "pisama_agent_sdk.bridge.DetectionOrchestrator"
+            "pisama.agents.bridge.DetectionOrchestrator"
         ) as mock_class:
             mock_instance = MagicMock()
             mock_instance.analyze_realtime = AsyncMock()

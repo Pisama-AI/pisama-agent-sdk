@@ -1,4 +1,8 @@
-"""Hook implementations for Claude Agent SDK integration."""
+"""Hook implementations for Claude Agent SDK integration.
+
+Thin forwarder; every name below comes from a sibling module that
+itself forwards to the equivalent :mod:`pisama.agents.hooks` path.
+"""
 
 from .matchers import (
     AGENT_TOOLS,

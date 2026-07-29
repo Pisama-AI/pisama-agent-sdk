@@ -15,6 +15,14 @@ Part of the [Pisama](https://pisama.ai) platform for single-agent, multi-agent, 
 
 Requires Python 3.10 or newer. Python 3.10 through 3.13 are tested.
 
+> **As of 0.4.0**, this package is a thin, permanent compatibility shim.
+> The implementation now lives in `pisama.agents` (part of the
+> [`pisama`](https://pypi.org/project/pisama/) base package, installed
+> automatically as a dependency); every module here re-exports its
+> `pisama.agents` equivalent under the original import path. Every API
+> below works exactly as documented, unchanged. New features and fixes
+> land in `pisama.agents`, not here.
+
 ## Install
 
 ```bash

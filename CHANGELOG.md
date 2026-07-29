@@ -1,5 +1,80 @@
 # Changelog
 
+## [0.4.0] - 2026-07-29
+
+### Changed
+
+- **This package is now a thin shim.** Every module (`atif.py`,
+  `bridge.py`, `check.py`, `check_compliance.py`, `clarification.py`,
+  `config.py`, `converter.py`, `evaluator.py`, `heal.py`,
+  `indication.py`, `openhands_adapter.py`, `session.py`, `tools.py`,
+  `types.py`, `hooks/*`, `chaos/*`, `cli/*`) now re-exports the
+  equivalent object from `pisama.agents.*` — the original code that used
+  to live in this distribution moved to the `pisama` base package
+  (`pisama-python`, published as `pisama` on PyPI, `pisama.agents`
+  submodule) as of `pisama` 0.6.0. This is a real per-path forward, not
+  a single flat `from pisama.agents import *`: deep imports like
+  `pisama_agent_sdk.hooks.pre_tool_use.pre_tool_use_hook` keep working
+  because `hooks/pre_tool_use.py` is itself a forwarding module, not
+  just a name reachable off the package root.
+- `dependencies` is now `["pisama>=0.6.0"]`, replacing
+  `pisama-core>=1.7.3,<2`. This package no longer imports `pisama_core`
+  directly at all — `pisama` depends on it transitively.
+- **`__version__` stays this distribution's own version** (`0.4.0`),
+  *not* aliased to `pisama.__version__` the way `pisama.agents.
+  __version__` is. `pisama.agents` doesn't release independently
+  anymore, so tracking the base package's version is correct there.
+  This package still cuts its own PyPI releases, and a caller checking
+  `pisama_agent_sdk.__version__` reasonably expects it to reflect the
+  installed `pisama-agent-sdk` release they asked pip for. Judgment
+  call, documented in `src/pisama_agent_sdk/__init__.py`.
+- **Extras (`evaluator`, `telemetry`) are unchanged in content** —
+  still `httpx>=0.24` and `posthog>=3.0` respectively, declared
+  directly rather than as `pisama[agents]` / `pisama[telemetry]`. Two
+  reasons: (1) the cycle rule below applies to any dependency edge from
+  this package onto a bracketed `pisama[...]` extra, not just the base
+  `dependencies` list, and depending on `pisama`'s own extra names
+  would couple this package's extras to naming decisions made in a
+  different repo's release cadence for no benefit; (2) `pisama`'s
+  `agents` extra is *already* just `httpx>=0.24` with nothing else in
+  it, so there's nothing to gain by indirecting through it. In
+  practice, `evaluator` is now a no-op: `pisama>=0.6.0` hard-depends on
+  `httpx>=0.27` unconditionally, so `analyze_atif()` / `PisamaEvaluator`
+  work regardless of whether `[evaluator]` was requested. This is a
+  user-visible (strictly more permissive, never breaking) behavior
+  change from 0.3.x, where omitting `[evaluator]` meant those calls
+  raised `ImportError`. `telemetry` keeps gating real behavior: posthog
+  stays a `try`/`except ImportError`-guarded optional import inside
+  `DetectionBridge`.
+- `auto_verify` stays removed (0.3.0). It vendored private backend
+  verification primitives into this MIT package — a real prior
+  incident — and was correctly not mirrored into `pisama.agents`
+  either. There was nothing left to forward; no references to it
+  remain anywhere in this repo.
+- The `pisama-openhands-monitor` console script keeps its entry point
+  (`pisama_agent_sdk.cli.openhands_monitor:main`) but that path is now
+  a two-line forwarder to `pisama.agents.cli.openhands_monitor:main`.
+
+### Why
+
+`pisama` 0.6.0 shipped `pisama.auto` and `pisama.agents` as original
+code, consolidating what used to be separately-maintained standalone
+packages (`pisama-auto`, `pisama-agent-sdk`) into one repo. Nothing on
+PyPI is unpublished by this change — 0.1.1 through 0.3.1 (and whatever
+ships as 0.3.2) stay exactly as they were. This release makes
+`pisama-agent-sdk` a permanent compatibility layer on top of the
+consolidated implementation so `import pisama_agent_sdk` keeps working
+without a code change on the caller's side, forever, while all future
+bug fixes and features land once in `pisama.agents` instead of being
+duplicated across two codebases.
+
+**Cycle rule:** this package depends on `pisama>=0.6.0` (the base
+package), never on `pisama[auto]` or `pisama[agents]` (the extras).
+Depending on a `pisama` extra that itself depended back on
+`pisama-agent-sdk` would be a real dependency cycle; today neither
+`pisama[auto]` nor `pisama[agents]` does that, but the direction is
+worth holding as an invariant rather than re-deriving it each release.
+
 ## [0.3.2] - 2026-07-29
 
 ### Fixed

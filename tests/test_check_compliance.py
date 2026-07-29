@@ -5,6 +5,14 @@ from __future__ import annotations
 # Tests need the module object, not the function. ``from pisama_agent_sdk
 # import check_compliance`` above imports the function, so we re-resolve
 # the module via importlib for unambiguous patching.
+#
+# As of pisama-agent-sdk 0.4.0, pisama_agent_sdk.check_compliance is a
+# thin forwarder: `check_compliance` the function is defined in (and
+# executes with the globals of) pisama.agents.check_compliance, not the
+# shim module. Patching `urlopen` on the shim module would therefore be
+# a no-op against the code that actually runs -- resolve the real
+# implementing module instead so patch.object(...) below still lands on
+# the name `check_compliance()` actually looks up at call time.
 import importlib
 import io
 import json
@@ -21,7 +29,7 @@ from pisama_agent_sdk import (
 )
 
 check_compliance_module = importlib.import_module(
-    "pisama_agent_sdk.check_compliance"
+    "pisama.agents.check_compliance"
 )
 
 
