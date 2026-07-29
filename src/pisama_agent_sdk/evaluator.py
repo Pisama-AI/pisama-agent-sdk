@@ -3,7 +3,7 @@
 Usage:
     from pisama_agent_sdk import PisamaEvaluator
 
-    evaluator = PisamaEvaluator(api_key="psk_...", base_url="https://mao-api.fly.dev")
+    evaluator = PisamaEvaluator(api_key="psk_...", base_url="https://api.pisama.ai")
 
     result = evaluator.evaluate(
         specification={"text": "Build a login page with OAuth"},
@@ -52,14 +52,14 @@ class PisamaEvaluator:
 
     Args:
         api_key: Pisama API key (psk_...)
-        base_url: Backend URL (default: https://mao-api.fly.dev)
+        base_url: Backend URL (default: https://api.pisama.ai)
         timeout: Request timeout in seconds
     """
 
     def __init__(
         self,
         api_key: str,
-        base_url: str = "https://mao-api.fly.dev",
+        base_url: str = "https://api.pisama.ai",
         timeout: float = 30.0,
     ):
         if not _HTTPX_AVAILABLE:
@@ -71,7 +71,7 @@ class PisamaEvaluator:
         self._client = httpx.Client(
             base_url=self.base_url,
             headers={
-                "X-MAO-API-Key": self.api_key,
+                "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
             },
             timeout=timeout,
@@ -154,7 +154,7 @@ class PisamaEvaluator:
         async with httpx.AsyncClient(
             base_url=self.base_url,
             headers={
-                "X-MAO-API-Key": self.api_key,
+                "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
             },
             timeout=self.timeout,

@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.1] - 2026-07-29
+
+### Security
+
+- `PisamaEvaluator` defaulted `base_url` to `https://mao-api.fly.dev`, a pre-rebrand
+  Fly.io hostname that is no longer a deployed app. Fly app names are globally unique
+  and become claimable once released, so any third party could have created an app of
+  that name and received the `api_key` this client sets as a default header on every
+  request. The default is now `https://api.pisama.ai`.
+
+### Fixed
+
+- Authenticate with `Authorization: Bearer` instead of the legacy `X-MAO-API-Key`
+  header. That header is not read anywhere in the current backend, and
+  `POST /api/v1/evaluate` declares `HTTPBearer`, so requests could not have succeeded
+  against the live API regardless of host.
+
 ## Unreleased
 
 ## 0.2.1
