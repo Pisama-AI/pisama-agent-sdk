@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pisama-agent-sdk"
-version = "0.3.2"
-description = "ATIF trace adapters and real-time failure hooks for agent runtimes"
+version = "0.4.0"
+description = "ATIF trace adapters and real-time failure hooks for agent runtimes (thin shim onto pisama.agents)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -24,10 +24,25 @@ classifiers = [
 ]
 
 dependencies = [
-    "pisama-core>=1.7.3,<2",
+    "pisama>=0.6.0",
 ]
 
 [project.optional-dependencies]
+# evaluator / telemetry stay declared, unchanged in content, purely for
+# backward compatibility with anyone's existing `pip install
+# pisama-agent-sdk[evaluator]` / `[telemetry]` / lockfile. They
+# deliberately name the underlying third-party packages directly
+# (httpx, posthog) rather than pointing at pisama's own `agents` /
+# `telemetry` extras -- see CHANGELOG.md "Extras handling" for the
+# reasoning (short version: pisama's `agents` extra is itself just
+# `httpx`, so referencing `pisama[agents]` here would add a second,
+# extra-name-coupled path to the same dependency for no benefit, and
+# the base `dependencies` -> extras direction is exactly the edge the
+# cycle rule below warns about). In practice `evaluator` is now a
+# no-op: pisama>=0.6.0 already hard-depends on httpx>=0.27, so
+# analyze_atif()/PisamaEvaluator work whether or not `[evaluator]` was
+# requested. `telemetry` still gates real behavior: posthog stays an
+# optional, try/imported dependency inside DetectionBridge.
 evaluator = [
     "httpx>=0.24",
 ]
@@ -89,10 +104,7 @@ warn_unused_configs = true
 check_untyped_defs = true
 no_implicit_optional = true
 
-[[tool.mypy.overrides]]
-module = [
-    "anthropic",
-    "pisama_core.*",
-    "posthog",
-]
-ignore_missing_imports = true
+# No [[tool.mypy.overrides]] needed as of 0.4.0: this package no longer
+# imports pisama_core, anthropic, or posthog directly (all moved to
+# pisama.agents' own implementation). `pisama` ships a py.typed marker,
+# so mypy resolves pisama.agents.* real types without an ignore.

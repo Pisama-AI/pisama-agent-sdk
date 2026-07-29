@@ -1,7 +1,15 @@
 """Pisama Agent SDK Integration.
 
-Provides hooks and tools for Claude Agent SDK that connect to
-Pisama's detection infrastructure for real-time failure prevention.
+Thin, forever-forwarding shim over :mod:`pisama.agents` (part of the
+``pisama`` base package, ``pip install pisama>=0.6.0``). The
+implementation that used to live in this distribution moved to
+``pisama-python`` as of pisama-agent-sdk 0.4.0; every module here now
+re-exports its ``pisama.agents`` equivalent under the original import
+path so existing ``import pisama_agent_sdk`` / ``from
+pisama_agent_sdk.hooks.pre_tool_use import pre_tool_use_hook`` code
+keeps working without change. See ``pisama.agents`` (in the
+``pisama-python`` repo) for the actual implementation and its own
+docstrings.
 
 Quick Start (passive monitoring):
     from pisama_agent_sdk import pre_tool_use_hook, post_tool_use_hook
@@ -28,7 +36,17 @@ Claude Agent SDK Custom Tool:
     )
 """
 
-__version__ = "0.3.2"
+# __version__ intentionally tracks THIS distribution's own release, not
+# pisama's. pisama.agents.__version__ aliases to pisama.__version__
+# (0.6.0+) because that code no longer releases independently -- this
+# package still does. pyproject.toml's `version` is the source of truth
+# for what ships to PyPI, and a caller checking `pisama_agent_sdk.
+# __version__` reasonably expects it to reflect the installed
+# pisama-agent-sdk release they asked pip for, not an unrelated base
+# package's version. Keep this literal in lockstep with `[project]
+# version` in pyproject.toml -- the `package` CI job asserts they match
+# on every build.
+__version__ = "0.4.0"
 
 # Hook functions (primary API)
 # ATIF (Harbor) trajectory analysis
@@ -41,6 +59,8 @@ from .atif import (
 
 # Auto-verify removed in 0.3.0: it vendored private backend verification
 # primitives into this MIT package. Verification is a hosted-service concern.
+# It was correctly not mirrored into pisama.agents either -- there is
+# nothing to forward.
 # Configuration
 # Bridge (for advanced use)
 from .bridge import DetectionBridge, configure_bridge, create_bridge, get_bridge
