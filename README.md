@@ -8,7 +8,7 @@
 
 ATIF trace adapters and real-time failure detection hooks for agent runtimes,
 including the
-[Claude Agent SDK](https://github.com/anthropics/claude-code/tree/main/packages/claude-agent-sdk),
+[Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk-python),
 OpenHands, and Harbor-compatible evaluation flows.
 
 Part of the [Pisama](https://pisama.ai) platform for single-agent, multi-agent, and sub-agent failure detection.
