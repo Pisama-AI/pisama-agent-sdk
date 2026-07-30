@@ -20,14 +20,30 @@ Requires Python 3.10 or newer. Python 3.10 through 3.13 are tested.
 > [`pisama`](https://pypi.org/project/pisama/) base package, installed
 > automatically as a dependency); every module here re-exports its
 > `pisama.agents` equivalent under the original import path. Every API
-> below works exactly as documented, unchanged. New features and fixes
-> land in `pisama.agents`, not here.
+> below works exactly as documented, unchanged, and this package stays
+> fully supported for existing installs. New features and fixes land in
+> `pisama.agents`, not here, so for new projects we recommend installing
+> it directly: `pip install "pisama[agents]"` gets you the same module,
+> one package instead of two.
 
 ## Install
 
 ```bash
 pip install pisama-agent-sdk
 ```
+
+New projects: install the extra directly instead, same module, one less
+package to track.
+
+```bash
+pip install "pisama[agents]"
+```
+
+Then `from pisama.agents import ...` in place of `from pisama_agent_sdk
+import ...`. Both stay in sync (this package re-exports `pisama.agents`
+by reference); pick whichever import path suits your project. Everything
+below uses the `pisama_agent_sdk` import path for existing users; swap in
+`pisama.agents` if you installed the extra.
 
 ## Quick Start
 
