@@ -89,6 +89,20 @@ options = ClaudeAgentOptions(
 )
 ```
 
+### Interpreting synchronous healing results
+
+`pisama_agent_sdk.heal.heal_now` forwards to `pisama.agents.heal.heal_now`.
+When `applied=False` and `escalated=False`, remain observe-only. These flags
+do not mean that a suggestion is absent: `fix` and a derived `prompt_patch`
+may still be present for human inspection when calibration evidence is
+unavailable. Their presence is not permission to apply a fix or evidence
+that it was escalated for approval.
+
+The current underlying Python parser preserves recognized fields including
+`applied`, `escalated`, `message`, and `fix`, but does not expose unknown fields
+such as `application_blocked_reason`. This compatibility is not certification
+of autonomous safety if detector evidence is restored later.
+
 ## Configuration
 
 ```python
